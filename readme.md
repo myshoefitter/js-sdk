@@ -1,7 +1,7 @@
 # mySHOEFITTER JS SDK
 
 <a href="https://en.myshoefitter.com" target="_blank" className="banner-image">
-  <img src="/images/banner.png" />
+  <img src="https://raw.githubusercontent.com/myshoefitter/js-sdk/main/.github/readme/promotion.jpg" alt="mySHOEFITTER Promotion Banner" />
 </a>
 
 ### How to use
