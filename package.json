@@ -6,8 +6,8 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc -w",
+    "build": "tsc && esbuild .temp/script.js --minify --outfile=./dist/script.js",
+    "dev": "chokidar './src/*.ts' -c 'yarn build'",
     "lint": "eslint 'src/**/*.ts'",
     "prettier": "prettier --write 'src/**/*.ts'"
   },
@@ -15,6 +15,8 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "chokidar-cli": "^3.0.0",
+    "esbuild": "^0.19.3",
     "eslint": "^8.48.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
