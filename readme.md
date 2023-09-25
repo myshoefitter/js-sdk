@@ -5,15 +5,12 @@
 </a>
 
 ### How to use
-Load the script from our CDN just before the `<head>` of your website:
+Load the script from our CDN just before the `</body>` of your website and nit the script by calling the init function:
 ```html
-<script src="https://cdn.myshoefitter.com/script.js"></script>
-```
-
-Init the script by calling the init function:
-```html
+<script src="https://js.myshoefitter.com/v1/script.js"></script>
 <script type="application/javascript">
   myshoefitter.init({
+    shopId: 'your-shop-id',
     productId: 'custom-product-id'
   });
 </script>
@@ -21,5 +18,5 @@ Init the script by calling the init function:
 
 Add an button to open the banner:
 ```html
-<button id="myshoefitter-button"></button>
+<button id="myshoefitter-button">Find the right size</button>
 ```
