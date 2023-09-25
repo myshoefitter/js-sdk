@@ -36,39 +36,45 @@ class MyShoefitter {
 
   public showBanner(): void {
     // Create the dialog element
-    const dialog = document.createElement('dialog');
-    dialog.style.width = '80%';
-    dialog.style.height = '400px';
-    dialog.style.padding = '0';
-    dialog.style.border = 'none';
-    dialog.style.borderRadius = '20px';
+    if (!this.dialog) {
+      this.dialog = document.createElement('dialog');
+      this.dialog.id = 'myshoefitter-banner';
+      this.dialog.style.width = '80%';
+      this.dialog.style.height = '400px';
+      this.dialog.style.padding = '0';
+      this.dialog.style.border = 'none';
+      this.dialog.style.borderRadius = '20px';
 
-    // Create the iframe element
-    const iframe = document.createElement('iframe');
-    iframe.src = this.generateBannerLink();
-    iframe.scrolling = 'no';
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.style.overflow = 'hidden';
+      // Create the iframe element
+      const iframe = document.createElement('iframe');
+      iframe.src = this.generateBannerLink();
+      iframe.scrolling = 'no';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.style.overflow = 'hidden';
 
-    // Append the iframe to the dialog
-    dialog.appendChild(iframe);
+      // Append the iframe to the dialog
+      this.dialog.appendChild(iframe);
 
-    // Append the dialog to the body
-    document.body.appendChild(dialog);
+      // Append the dialog to the body
+      document.body.appendChild(this.dialog);
+    }
 
     // Listen to close event from iframe content
-    window.addEventListener('message', this.handleMessage, false);
+    window.addEventListener('message', (event) => this.handleMessage(event), false);
 
     // Show the dialog
-    return dialog.showModal();
+    return this.dialog.showModal();
   }
 
   public closeBanner(): void {
     if (this.config) {
       this.dialog?.close();
       this.trackEvent('Banner Close');
+
+      // Remove event listeners
+      window.removeEventListener('message', (event) => this.handleMessage(event), false)
     } else {
       console.warn('mySHOEFITTER is not initialized');
     }
@@ -79,7 +85,7 @@ class MyShoefitter {
    * @returns https://banner.myshoefitter.com/?....
    */
   private generateBannerLink(): string {
-    if (!this.config?.productId) {
+    if (!this.config?.productId || !this.params) {
       console.warn('mySHOEFITTER: No productId found!')
       return '';
     }
