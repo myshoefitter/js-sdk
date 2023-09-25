@@ -42,11 +42,10 @@ class MyShoefitter {
     if (!this.dialog) {
       this.dialog = document.createElement('dialog');
       this.dialog.id = 'myshoefitter-banner';
-      this.dialog.style.width = '80%';
-      this.dialog.style.height = '400px';
       this.dialog.style.padding = '0';
       this.dialog.style.border = 'none';
       this.dialog.style.borderRadius = '20px';
+      this.setDialogSize();
 
       // Create the iframe element
       const iframe = document.createElement('iframe');
@@ -64,6 +63,9 @@ class MyShoefitter {
       document.body.appendChild(this.dialog);
     }
 
+    // Listen to window resize events
+    window.addEventListener('resize', () => this.setDialogSize());
+
     // Listen to close event from iframe content
     window.addEventListener('message', (event) => this.handleMessage(event), false);
 
@@ -80,7 +82,8 @@ class MyShoefitter {
       this.trackEvent('Banner Close');
 
       // Remove event listeners
-      window.removeEventListener('message', (event) => this.handleMessage(event), false)
+      window.removeEventListener('message', (event) => this.handleMessage(event), false);
+      window.removeEventListener('resize', () => this.setDialogSize(), false);
     } else {
       console.warn('mySHOEFITTER is not initialized');
     }
@@ -163,6 +166,29 @@ class MyShoefitter {
     return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
       (parseInt(c, 10) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> parseInt(c, 10) / 4).toString(16)
     );
+  }
+
+  private setDialogSize(): void {
+
+    if (!this.dialog) {
+      return;
+    }
+
+    const screenWidth = window.innerWidth;
+
+    if (screenWidth <= 767) {
+      // Mobile devices
+      this.dialog.style.width = '95%';
+      this.dialog.style.height = '85vh';
+    } else if (screenWidth > 767 && screenWidth <= 1024) {
+      // Tablets
+      this.dialog.style.width = '90%';
+      this.dialog.style.height = '70vh';
+    } else {
+      // Desktop
+      this.dialog.style.width = '80%';
+      this.dialog.style.height = '400px';
+    }
   }
 }
 
