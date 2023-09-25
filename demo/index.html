@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>JS SDK Demo</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="../dist/script.js"></script>
-  </head>
-  <body>
-    <button id="myshoefitter-button">Größe Finden</button>
 
-    <!-- Place abov head-->
-    <script type="application/javascript">
-      myshoefitter.init({
-        productId: 'abcdef'
-      });
-    </script>
-        
-  </body>
+<head>
+  <title>JS SDK Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+  <button id="myshoefitter-button">Größe Finden</button>
+
+  <!-- It should be added just before the </body> tag. -->
+  <script src="../dist/script.js"></script>
+  <script type="application/javascript">
+    myshoefitter.init({
+      shopId: 'abcdef',
+      productId: 'abcdef'
+    });
+  </script>
+
+</body>
+
 </html>

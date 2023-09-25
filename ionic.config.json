@@ -1,0 +1,7 @@
+{
+  "name": "js-sdk",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom"
+}
