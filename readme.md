@@ -5,7 +5,7 @@
 </a>
 
 ### How to use
-Load the script from our CDN just before the `</body>` of your website and nit the script by calling the init function:
+Add the script just before the `</body>` of your website:
 ```html
 <!-- Load the Script -->
 <script src="https://js.myshoefitter.com/v1/script.js"></script>
