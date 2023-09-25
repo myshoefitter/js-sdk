@@ -34,6 +34,9 @@ class MyShoefitter {
     }
   }
 
+  /**
+   * Creates a new HTMLDialogElement and opens the Banner as an iFrame
+   */
   public showBanner(): void {
     // Create the dialog element
     if (!this.dialog) {
@@ -65,12 +68,15 @@ class MyShoefitter {
     window.addEventListener('message', (event) => this.handleMessage(event), false);
 
     // Show the dialog
-    return this.dialog.showModal();
+    this.dialog.showModal();
   }
 
+  /**
+   * Closes the Banner and removes it from the DOM
+   */
   public closeBanner(): void {
-    if (this.config) {
-      this.dialog?.close();
+    if (this.config && this.dialog) {
+      this.dialog.close();
       this.trackEvent('Banner Close');
 
       // Remove event listeners
