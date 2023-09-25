@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/v1/script.js",
+      "permanent": true
+    }
+  ]
+}
