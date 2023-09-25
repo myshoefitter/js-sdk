@@ -24,5 +24,5 @@ Add an button to open the banner:
 <button id="myshoefitter-button">Find the right size</button>
 ```
 
-**🚀 Get your Shop ID at [https://en.myshoefitter.com/kontakt](https://en.myshoefitter.com/kontakt)**
+**🚀 Get your Shop ID at [https://en.myshoefitter.com/kontakt](https://en.myshoefitter.com/kontakt)**  
 **📖 Read the Documentation at [https://docs.myshoefitter.com](https://docs.myshoefitter.com)**
