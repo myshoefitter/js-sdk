@@ -8,6 +8,8 @@ class MyShoefitter {
   private dialog: HTMLDialogElement | null = null;
   // The params for the banner
   private params: BannerParams | null = null;
+  // Banner Origin
+  private readonly bannerOrigin = 'https://banner.myshoefitter.com';
 
   /**
    * Initialize the Script
@@ -98,7 +100,7 @@ class MyShoefitter {
       console.warn('mySHOEFITTER: No productId found!')
       return '';
     }
-    return 'https://banner.myshoefitter.com/?' + new URLSearchParams(this.params as unknown as Record<string, string>).toString();
+    return this.bannerOrigin + '/?' + new URLSearchParams(this.params as unknown as Record<string, string>).toString();
   }
 
   /**
@@ -119,7 +121,7 @@ class MyShoefitter {
    * @param event MessageEvent
    */
   private handleMessage(event: MessageEvent): void {
-    if (event.origin !== 'https://banner.myshoefitter.com') {
+    if (event.origin !== this.bannerOrigin) {
       return;
     }
     switch (event.data) {
@@ -143,7 +145,7 @@ class MyShoefitter {
 
     const data = {
       identification_code: 'kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy',
-      url: 'https://banner.myshoefitter.com/',
+      url: this.bannerOrigin,
       title: document.title,
       referrer: encodeURIComponent(location.href),
       screen_width: screen.width,
