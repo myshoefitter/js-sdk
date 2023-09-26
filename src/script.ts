@@ -43,10 +43,11 @@ class MyShoefitter {
     // Create the dialog element
     if (!this.dialog) {
       this.dialog = document.createElement('dialog');
+      this.dialog.style.display = 'flex';
       this.dialog.id = 'myshoefitter-banner';
       this.dialog.style.padding = '0';
       this.dialog.style.border = 'none';
-      this.dialog.style.borderRadius = '20px';
+      this.dialog.style.borderRadius = '25px';
       this.setDialogSize();
 
       // Create the iframe element
@@ -178,18 +179,18 @@ class MyShoefitter {
 
     const screenWidth = window.innerWidth;
 
-    if (screenWidth <= 767) {
+    if (screenWidth <= 768) {
       // Mobile devices
       this.dialog.style.width = '95%';
       this.dialog.style.height = '85vh';
-    } else if (screenWidth > 767 && screenWidth <= 1024) {
+    } else if (screenWidth > 768 && screenWidth <= 1024) {
       // Tablets
       this.dialog.style.width = '90%';
       this.dialog.style.height = '70vh';
     } else {
       // Desktop
       this.dialog.style.width = '80%';
-      this.dialog.style.height = '400px';
+      this.dialog.style.height = '370px';
     }
   }
 }
