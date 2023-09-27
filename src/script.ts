@@ -43,7 +43,6 @@ class MyShoefitter {
     // Create the dialog element
     if (!this.dialog) {
       this.dialog = document.createElement('dialog');
-      this.dialog.style.display = 'flex';
       this.dialog.id = 'myshoefitter-banner';
       this.dialog.style.padding = '0';
       this.dialog.style.border = 'none';
