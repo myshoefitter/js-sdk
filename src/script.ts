@@ -139,7 +139,6 @@ class MyShoefitter {
     }
 
     if (event.data.type && event.data.type === 'iframeScrollHeight') {
-        console.log("Iframe's scrollHeight:", event.data.height);
         const iframe = this.dialog?.children[0] as HTMLIFrameElement;
         iframe.height = event.data.height;
         iframe.width = event.data.width;
