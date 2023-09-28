@@ -63,32 +63,10 @@ class MyShoefitter {
 
       // Append the dialog to the body
       document.body.appendChild(this.dialog);
-
-      const messageHandler = (event: MessageEvent) => {
-        if (event.origin !== this.bannerOrigin) {
-            return;
-        }
-  
-        if (event.data.type && event.data.type === 'iframeScrollHeight') {
-            console.log("Iframe's scrollHeight:", event.data.height);
-            iframe.height = event.data.height;
-            iframe.width = event.data.width;
-            if (this.dialog) {
-              this.dialog.style.height = iframe.height + "px";
-              this.dialog.style.width = iframe.width + "px";
-          }
-        } else {
-            this.handleMessage(event);
-        }
-    };
-    window.addEventListener('message', messageHandler, false);
     }
 
-    // Listen to window resize events
-    //window.addEventListener('resize', () => this.setDialogSize());
-
-    // Listen to close event from iframe content
-    window.addEventListener('message', (event) => this.handleMessage(event), false);
+    // Listen to close and resize events from iframe content
+    window.addEventListener('message', (event) => this.messageParser(event), false);
 
     // Show the dialog
     this.dialog.showModal();
@@ -149,6 +127,25 @@ class MyShoefitter {
         break;
     }
   }
+
+  private messageParser (event: MessageEvent) {
+    if (event.origin !== this.bannerOrigin) {
+        return;
+    }
+
+    if (event.data.type && event.data.type === 'iframeScrollHeight') {
+        console.log("Iframe's scrollHeight:", event.data.height);
+        const iframe = this.dialog?.children[0] as HTMLIFrameElement;
+        iframe.height = event.data.height;
+        iframe.width = event.data.width;
+        if (this.dialog) {
+          this.dialog.style.height = iframe.height + "px";
+          this.dialog.style.width = iframe.width + "px";
+      }
+    } else {
+        this.handleMessage(event);
+    }
+}
 
   /**
    * Track script load event in Pirsch
