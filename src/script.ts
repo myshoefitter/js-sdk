@@ -128,6 +128,10 @@ class MyShoefitter {
     }
   }
 
+  /**
+   * Parses custom events from the iframe content
+   * @param event MessageEvent
+   */
   private messageParser (event: MessageEvent) {
     if (event.origin !== this.bannerOrigin) {
         return;
