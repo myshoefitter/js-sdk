@@ -47,6 +47,7 @@ class MyShoefitter {
       this.dialog.style.padding = '0';
       this.dialog.style.border = 'none';
       this.dialog.style.borderRadius = '25px';
+      this.dialog.style.overflow = 'hidden';
       this.setDialogSize();
 
       // Create the iframe element
@@ -65,11 +66,8 @@ class MyShoefitter {
       document.body.appendChild(this.dialog);
     }
 
-    // Listen to window resize events
-    window.addEventListener('resize', () => this.setDialogSize());
-
-    // Listen to close event from iframe content
-    window.addEventListener('message', (event) => this.handleMessage(event), false);
+    // Listen to close and resize events from iframe content
+    window.addEventListener('message', (event) => this.messageParser(event), false);
 
     // Show the dialog
     this.dialog.showModal();
@@ -128,6 +126,28 @@ class MyShoefitter {
       case 'CLOSE_BANNER':
         this.closeBanner();
         break;
+    }
+  }
+
+  /**
+   * Parses custom events from the iframe content
+   * @param event MessageEvent
+   */
+  private messageParser(event: MessageEvent) {
+    if (event.origin !== this.bannerOrigin) {
+      return;
+    }
+
+    if (event.data.type && event.data.type === 'iframeScrollHeight') {
+      const iframe = this.dialog?.children[0] as HTMLIFrameElement;
+      iframe.height = event.data.height;
+      iframe.width = event.data.width;
+      if (this.dialog) {
+        this.dialog.style.height = iframe.height + "px";
+        this.dialog.style.width = iframe.width + "px";
+      }
+    } else {
+      this.handleMessage(event);
     }
   }
 
