@@ -133,23 +133,23 @@ class MyShoefitter {
    * Parses custom events from the iframe content
    * @param event MessageEvent
    */
-  private messageParser (event: MessageEvent) {
+  private messageParser(event: MessageEvent) {
     if (event.origin !== this.bannerOrigin) {
-        return;
+      return;
     }
 
     if (event.data.type && event.data.type === 'iframeScrollHeight') {
-        const iframe = this.dialog?.children[0] as HTMLIFrameElement;
-        iframe.height = event.data.height;
-        iframe.width = event.data.width;
-        if (this.dialog) {
-          this.dialog.style.height = iframe.height + "px";
-          this.dialog.style.width = iframe.width + "px";
+      const iframe = this.dialog?.children[0] as HTMLIFrameElement;
+      iframe.height = event.data.height;
+      iframe.width = event.data.width;
+      if (this.dialog) {
+        this.dialog.style.height = iframe.height + "px";
+        this.dialog.style.width = iframe.width + "px";
       }
     } else {
-        this.handleMessage(event);
+      this.handleMessage(event);
     }
-}
+  }
 
   /**
    * Track script load event in Pirsch
