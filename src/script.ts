@@ -47,6 +47,7 @@ class MyShoefitter {
       this.dialog.style.padding = '0';
       this.dialog.style.border = 'none';
       this.dialog.style.borderRadius = '25px';
+      this.dialog.style.overflow = 'hidden';
       this.setDialogSize();
 
       // Create the iframe element
