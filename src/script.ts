@@ -107,7 +107,8 @@ class MyShoefitter {
   private addButtonClickListener(): void {
     const button = document.getElementById('myshoefitter-button');
     if (button) {
-      button.addEventListener('click', () => {
+      button.addEventListener('click', (event: Event) => {
+        event.preventDefault();
         this.showBanner();
         this.trackEvent('Banner Open');
       });
