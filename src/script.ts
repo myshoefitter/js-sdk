@@ -9,7 +9,7 @@ class MyShoefitter {
   // The params for the banner
   private params: BannerParams | null = null;
   // Banner Origin
-  private readonly bannerOrigin = 'https://banner.myshoefitter.com';
+  private readonly bannerOrigin = 'https://dialog.myshoefitter.com';
 
   /**
    * Initialize the Script
@@ -43,7 +43,7 @@ class MyShoefitter {
     // Create the dialog element
     if (!this.dialog) {
       this.dialog = document.createElement('dialog');
-      this.dialog.id = 'myshoefitter-banner';
+      this.dialog.id = 'myshoefitter-dialog';
       this.dialog.style.padding = '0';
       this.dialog.style.border = 'none';
       this.dialog.style.borderRadius = '25px';
