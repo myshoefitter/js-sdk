@@ -156,28 +156,40 @@ class MyShoefitter {
    * Track script load event in Pirsch
    * Extracted from https://api.pirsch.io/pirsch-events.js
    */
-  private trackEvent(eventName: string) {
+  private async trackEvent(eventName: string) {
 
-    // Don't send request on localhost
-    if ((/^localhost(.*)$|^127(\.[0-9]{1,3}){3}$/is.test(location.hostname) || location.protocol === "file:")) {
-      console.info("Pirsch is ignored on localhost. Add the data-dev attribute to enable it.");
-      return true;
+    try {
+
+      // Don't send request on localhost
+      if ((/^localhost(.*)$|^127(\.[0-9]{1,3}){3}$/is.test(location.hostname) || location.protocol === "file:")) {
+        console.info("Pirsch is ignored on localhost. Add the data-dev attribute to enable it.");
+      }
+
+      await fetch(`https://usage.myshoefitter.com/p/pv?code=kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy&url=${this.bannerOrigin}&t=${document.title}&ref=${encodeURIComponent(location.href)}&w=${screen.width}&h=${screen.height}`);
+
+    } catch (error) {
+
+      // Send beacon as fallback, if fetch is not supported. Could be blocked by ad blockers.
+
+      const data = {
+        identification_code: 'kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy',
+        url: this.bannerOrigin,
+        title: document.title,
+        referrer: encodeURIComponent(location.href),
+        screen_width: screen.width,
+        screen_height: screen.height,
+        user_agent: navigator.userAgent,
+        event_name: eventName,
+        event_duration: 0,
+        event_meta: this.params
+      };
+
+      try {
+        navigator.sendBeacon('https://api.pirsch.io/event', JSON.stringify(data));
+      } catch (error) {
+        console.log('mySHOEFITTER Tracking Error:', error);
+      }
     }
-
-    const data = {
-      identification_code: 'kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy',
-      url: this.bannerOrigin,
-      title: document.title,
-      referrer: encodeURIComponent(location.href),
-      screen_width: screen.width,
-      screen_height: screen.height,
-      user_agent: navigator.userAgent,
-      event_name: eventName,
-      event_duration: 0,
-      event_meta: this.params
-    };
-
-    return navigator.sendBeacon('https://api.pirsch.io/event', JSON.stringify(data));
   }
 
   /**
