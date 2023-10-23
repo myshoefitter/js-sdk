@@ -37,6 +37,16 @@ class MyShoefitter {
   }
 
   /**
+   * Hides the loader spinner.
+   */
+  private hideLoader(): void {
+      const loader = document.getElementById('myshoefitter-loader');
+      if (loader) {
+          loader.style.display = 'none';
+      }
+  }
+
+  /**
    * Creates a new HTMLDialogElement and opens the Banner as an iFrame
    */
   public showBanner(): void {
@@ -59,11 +69,42 @@ class MyShoefitter {
       iframe.style.border = 'none';
       iframe.style.overflow = 'hidden';
 
+      // Create the loading element
+      const loader = document.createElement('div');
+      loader.className = 'myshoefitter-loader';
+      loader.id = 'myshoefitter-loader';
+      loader.innerHTML= `
+        <style>
+        .myshoefitter-loader{
+          display: flex;
+          border: 8px solid #f3f3f3;
+          border-top: 8px solid #ff7d4f;
+          border-radius: 50%;
+          width: 50px;
+          height: 50px;
+          animation: spin 1s linear infinite;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 10000;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        </style>`
+      this.dialog.appendChild(loader);
+
       // Append the iframe to the dialog
       this.dialog.appendChild(iframe);
 
       // Append the dialog to the body
       document.body.appendChild(this.dialog);
+      iframe.onload = () => {
+        this.hideLoader();
+    };
     }
 
     // Listen to close and resize events from iframe content
@@ -222,6 +263,7 @@ class MyShoefitter {
     } else {
       // Desktop
       this.dialog.style.width = '80%';
+      this.dialog.style.maxWidth = '1200px';
       this.dialog.style.height = '370px';
     }
   }
