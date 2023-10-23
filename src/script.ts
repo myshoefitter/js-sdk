@@ -206,7 +206,20 @@ class MyShoefitter {
         console.info("Pirsch is ignored on localhost. Add the data-dev attribute to enable it.");
       }
 
-      await fetch(`https://usage.myshoefitter.com/p/pv?code=kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy&url=${this.bannerOrigin}&t=${document.title}&ref=${encodeURIComponent(location.href)}&w=${screen.width}&h=${screen.height}`);
+      navigator.sendBeacon('https://usage.myshoefitter.com/p/e', JSON.stringify({
+        url: this.bannerOrigin,
+        identification_code: 'kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy',
+        title: document.title,
+        referrer: encodeURIComponent(location.href),
+        screen_width: screen.width,
+        screen_height: screen.height,
+        user_agent: navigator.userAgent,
+        event_name: eventName,
+        event_duration: 0,
+        event_meta: {
+          sessionId: this.params?.sessionId,
+        }
+      }));
 
     } catch (error) {
 
