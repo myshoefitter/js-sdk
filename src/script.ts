@@ -9,7 +9,7 @@ class MyShoefitter {
   // The params for the banner
   private params: BannerParams | null = null;
   // Banner Origin
-  private readonly bannerOrigin = 'https://dialog.myshoefitter.com';
+  private readonly bannerOrigin = 'https://banner.myshoefitter.com';
 
   /**
    * Initialize the Script
