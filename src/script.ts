@@ -23,6 +23,7 @@ class MyShoefitter {
       this.params = Object.assign(config,
         {
           sessionId: this.generateSessionId(),
+          clientType: this.detectClient(),
           ref: location.href // Don't remove or encrypt! Needed for Analytics!
         });
 
@@ -34,6 +35,21 @@ class MyShoefitter {
     } else {
       console.warn('mySHOEFITTER: productId is missing!');
     }
+  }
+
+  /**
+   * Detects client type
+   */
+  private detectClient() : string {  
+    const userAgent = window.parent.navigator.userAgent;
+    const isMobile = /Mobi/i.test(userAgent) && !/Tablet|iPad/i.test(userAgent);
+    const isTablet = /Tablet|iPad/i.test(userAgent) || (window.innerWidth <= 1024 && /Mobi/i.test(userAgent));
+    const isDesktop = !isMobile && !isTablet;
+
+    if (isMobile) return 'mobile';
+    else if (isTablet) return 'tablet';
+    else if (isDesktop) return 'desktop';
+    else return 'desktop'
   }
 
   /**
