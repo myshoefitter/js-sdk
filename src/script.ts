@@ -40,7 +40,7 @@ class MyShoefitter {
   /**
    * Detects client type
    */
-  private detectClient() : string {  
+  private detectClient(): string {
     const userAgent = window.parent.navigator.userAgent;
     const isMobile = /Mobi/i.test(userAgent) && !/Tablet|iPad/i.test(userAgent);
     const isTablet = /Tablet|iPad/i.test(userAgent) || (window.innerWidth <= 1024 && /Mobi/i.test(userAgent));
@@ -56,10 +56,10 @@ class MyShoefitter {
    * Hides the loader spinner.
    */
   private hideLoader(): void {
-      const loader = document.getElementById('myshoefitter-loader');
-      if (loader) {
-          loader.style.display = 'none';
-      }
+    const loader = document.getElementById('myshoefitter-loader');
+    if (loader) {
+      loader.style.display = 'none';
+    }
   }
 
   /**
@@ -89,31 +89,33 @@ class MyShoefitter {
       iframe.style.overflow = 'hidden';
 
       // Create the loading element
+      // Create the loader div
       const loader = document.createElement('div');
       loader.className = 'myshoefitter-loader';
       loader.id = 'myshoefitter-loader';
-      loader.innerHTML= `
+      loader.style.display = 'flex';
+      loader.style.border = '8px solid #f3f3f3';
+      loader.style.borderTop = '8px solid #ff7d4f';
+      loader.style.borderRadius = '50%';
+      loader.style.width = '50px';
+      loader.style.height = '50px';
+      loader.style.position = 'absolute';
+      loader.style.top = 'calc(50% - 25px)';
+      loader.style.left = 'calc(50% - 25px)';
+      loader.style.zIndex = '10000';
+      loader.innerHTML = `
         <style>
-        .myshoefitter-loader{
-          display: flex;
-          border: 8px solid #f3f3f3;
-          border-top: 8px solid #ff7d4f;
-          border-radius: 50%;
-          width: 50px;
-          height: 50px;
+        .myshoefitter-loader {
           animation: spin 1s linear infinite;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          z-index: 10000;
         }
-        
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        </style>`
+        </style>
+      `;
+  
+      // Append the loader to the dialog
       this.dialog.appendChild(loader);
 
       // Append the iframe to the dialog
@@ -123,7 +125,7 @@ class MyShoefitter {
       document.body.appendChild(this.dialog);
       iframe.onload = () => {
         this.hideLoader();
-    };
+      };
     }
 
     // Listen to close and resize events from iframe content
