@@ -58,12 +58,15 @@ class MyShoefitter {
       this.dialog.style.border = 'none';
       this.dialog.style.borderRadius = '25px';
       this.dialog.style.overflow = 'hidden';
+      this.dialog.style.maxWidth = '1200px';
+      this.dialog.style.minWidth = '375px';
       this.setDialogSize();
 
       // Create the iframe element
       const iframe = document.createElement('iframe');
       iframe.src = this.generateBannerLink();
       iframe.scrolling = 'no';
+      iframe.style.maxWidth = '1200px';
       iframe.style.width = '100%';
       iframe.style.height = '100%';
       iframe.style.border = 'none';
@@ -183,7 +186,6 @@ class MyShoefitter {
     if (event.data.type && event.data.type === 'iframeScrollHeight') {
       const iframe = this.dialog?.children[0] as HTMLIFrameElement;
       iframe.height = event.data.height;
-      iframe.width = event.data.width;
       if (this.dialog) {
         this.dialog.style.height = iframe.height + "px";
         this.dialog.style.width = iframe.width + "px";
