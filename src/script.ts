@@ -9,7 +9,7 @@ class MyShoefitter {
   // The params for the banner
   private params: BannerParams | null = null;
   // Banner Origin
-  private readonly bannerOrigin = 'https://banner.myshoefitter.com';
+  private readonly bannerOrigin = 'https://dialog.myshoefitter.com';
 
   /**
    * Initialize the Script
@@ -153,7 +153,7 @@ class MyShoefitter {
 
   /**
    * Generates the link incl. all params that opens in the iframe
-   * @returns https://banner.myshoefitter.com/?....
+   * @returns https://dialog.myshoefitter.com/?....
    */
   private generateBannerLink(): string {
     if (!this.config?.productId || !this.params) {
