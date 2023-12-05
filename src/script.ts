@@ -76,6 +76,9 @@ class MyShoefitter {
       this.dialog.style.overflow = 'hidden';
       this.dialog.style.maxWidth = '1200px';
       this.dialog.style.minWidth = '375px';
+      this.dialog.style.top = '50%';
+      this.dialog.style.left = '50%';
+      this.dialog.style.transform = 'translate(-50%, -50%)';
       this.setDialogSize();
 
       // Create the iframe element
