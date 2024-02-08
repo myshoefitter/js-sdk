@@ -11,7 +11,7 @@
     "lint": "eslint 'src/**/*.ts'",
     "prettier": "prettier --write 'src/**/*.ts'",
     "deploy:prod": "yarn build && vercel --prod",
-    "deploy:de": "yarn build && vercel"
+    "deploy:dev": "yarn build && vercel"
   },
   "dependencies": {},
   "devDependencies": {
