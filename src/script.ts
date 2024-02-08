@@ -24,7 +24,7 @@ class MyShoefitter {
         {
           sessionId: this.generateSessionId(),
           clientType: this.detectClient(),
-          ref: location.href // Don't remove or encrypt! Needed for Analytics!
+          utm_source: window?.location.hostname // Don't remove or encrypt! Needed for Analytics!
         });
 
       this.addButtonClickListener();
