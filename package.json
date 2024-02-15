@@ -9,9 +9,7 @@
     "build": "tsc && esbuild .temp/script.js --minify --outfile=./dist/v1/script.js",
     "dev": "chokidar './src/*.ts' -c 'yarn build'",
     "lint": "eslint 'src/**/*.ts'",
-    "prettier": "prettier --write 'src/**/*.ts'",
-    "deploy:prod": "yarn build && vercel --prod",
-    "deploy:dev": "yarn build && vercel"
+    "prettier": "prettier --write 'src/**/*.ts'"
   },
   "dependencies": {},
   "devDependencies": {
