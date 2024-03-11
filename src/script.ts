@@ -9,7 +9,9 @@ class MyShoefitter {
   // The params for the banner
   private params: BannerParams | null = null;
   // Banner Origin
-  private readonly bannerOrigin = 'https://dialog.myshoefitter.com';
+  private readonly bannerOrigin = this.isDev()
+    ? 'http://localhost:4321'
+    : 'https://dialog.myshoefitter.com';
 
   /**
    * Initialize the Script
@@ -35,6 +37,19 @@ class MyShoefitter {
     } else {
       console.warn('mySHOEFITTER: productId is missing!');
     }
+  }
+
+  /**
+   * Listen to public events from the iframe
+   * @param callback (event: string) => void
+   */
+  public events(callback: (event: CustomEvent) => void) {
+    window.addEventListener('message', (event) => {
+      if(event.origin !== this.bannerOrigin) {
+        return;
+      }
+      callback(event.data);
+    });
   }
 
   /**
@@ -281,6 +296,10 @@ class MyShoefitter {
       this.dialog.style.height = '370px';
     }
   }
+
+  private isDev(): boolean {
+    return window.location.hostname.includes('localhost') || window.location.protocol === 'file:';
+  }
 }
 
 interface ScriptConfig {
@@ -294,8 +313,16 @@ interface BannerParams extends ScriptConfig {
   sessionId: string;
 }
 
+interface CustomEvent {
+  type: EventTypes;
+  message: string | number;
+}
+
+type EventTypes = 'result';
+
 interface MyShoefitterClass {
   init: (config: ScriptConfig) => void;
+  events: (callback: (event: string) => void) => void;
 }
 
 interface WindowExtended extends Window {
