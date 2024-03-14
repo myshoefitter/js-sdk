@@ -1,3 +1,5 @@
+import { dc } from './shop-adapters/index';
+
 /**
  * Represents a service with functionalities related to a product.
  */
@@ -12,6 +14,8 @@ class MyShoefitter {
   private readonly bannerOrigin = this.isDev()
     ? 'http://localhost:4321'
     : 'https://dialog.myshoefitter.com';
+  // Shop systems width available adapters
+  private readonly supportedShopSystems = ['woocommerce', 'shopify', 'magento', 'shopware', 'oxid', 'prestashop', 'bigcommerce', 'dc', 'custom'];
 
   /**
    * Initialize the Script
@@ -20,23 +24,42 @@ class MyShoefitter {
   public init(config: ScriptConfig): void {
     this.config = config;
 
-    if (config?.productId) {
-
-      this.params = Object.assign(config,
-        {
-          sessionId: this.generateSessionId(),
-          clientType: this.detectClient(),
-          utm_source: window?.location.hostname // Don't remove or encrypt! Needed for Analytics!
-        });
-
-      this.addButtonClickListener();
-      this.trackEvent('Button Load');
-
-      console.log('mySHOEFITTER Config:', config);
-      console.log('mySHOEFITTER Session ID:', this.params.sessionId);
-    } else {
-      console.warn('mySHOEFITTER: productId is missing!');
+    // Show warning if shop id is missing - shop id is important for tracking
+    if (!config?.shopId) {
+      console.error('mySHOEFITTER: Please provide shopId!');
     }
+
+    // Show error if productId and shopSystem are missing - pwa will not work without these parameters
+    if (!config?.productId && !config?.shopSystem) {
+      console.error('mySHOEFITTER: Please provide either productId or shopSystem!');
+    }
+
+    if (config?.shopSystem && !this.supportedShopSystems.includes(config.shopSystem)) {
+      console.error('mySHOEFITTER: Shop System is not supported! productId is required.');
+    }
+
+    // Check if the Shop System is supported and find the Product ID automatically
+    if (!config?.productId && config?.shopSystem && this.supportedShopSystems.includes(config.shopSystem)) {
+      config.productId = this.findProductId(config.shopSystem);
+      if (config.productId) {
+        console.log(`mySHOEFITTER: Product ID found: ${config.productId}`);
+      } else {
+        console.error('mySHOEFITTER: Product ID could not be found! Please set it manually using productId parameter.');
+      }
+    }
+
+    this.params = Object.assign(config,
+      {
+        sessionId: this.generateSessionId(),
+        clientType: this.detectClient(),
+        utm_source: window?.location.hostname // Don't remove or encrypt! Needed for Analytics!
+      });
+
+    this.addButtonClickListener();
+    this.trackEvent('Button Load');
+
+    console.log('mySHOEFITTER Config:', config);
+    console.log('mySHOEFITTER Session ID:', this.params.sessionId);
   }
 
   /**
@@ -45,7 +68,7 @@ class MyShoefitter {
    */
   public events(callback: (event: CustomEvent) => void) {
     window.addEventListener('message', (event) => {
-      if(event.origin !== this.bannerOrigin) {
+      if (event.origin !== this.bannerOrigin) {
         return;
       }
       callback(event.data);
@@ -262,6 +285,15 @@ class MyShoefitter {
     }
   }
 
+  private findProductId(shopSystem: string) {
+    switch (shopSystem) {
+      case 'dc':
+        return dc.findProductId();
+      default:
+        return null;
+    }
+  }
+
   /**
    * Generate a unique session ID
    * @returns Session ID
@@ -304,9 +336,10 @@ class MyShoefitter {
 
 interface ScriptConfig {
   shopId: string;
-  productId: string;
+  productId?: string;
   logsEnabled?: boolean;
   buttonSelector?: string;
+  shopSystem?: string;
 }
 
 interface BannerParams extends ScriptConfig {
@@ -320,14 +353,11 @@ interface CustomEvent {
 
 type EventTypes = 'result';
 
-interface MyShoefitterClass {
-  init: (config: ScriptConfig) => void;
-  events: (callback: (event: string) => void) => void;
-}
-
-interface WindowExtended extends Window {
-  myshoefitter: MyShoefitterClass;
-}
-
 // Expose class to parent page
-(window as unknown as WindowExtended).myshoefitter = new MyShoefitter();
+window.myshoefitter = new MyShoefitter();
+
+declare global {
+  interface Window {
+    myshoefitter: MyShoefitter;
+  }
+}
