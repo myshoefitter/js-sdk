@@ -10,22 +10,15 @@
   <button id="myshoefitter-button">Größe Finden</button>
 
   <!-- It should be added just before the </body> tag. -->
+  <!-- <script src="https://js.myshoefitter.com/v1/script.js"></script> -->
   <script src="../dist/v1/script.js"></script>
   <script type="application/javascript">
+    myshoefitter.events(event => {
+      console.log('mySHOEFITTER Event:', event);
+    });
     myshoefitter.init({
       shopId: '64be733131ccc3b6d79c',
       productId: 'GND-210055-01-H'
-    });
-    myshoefitter.events(event => {
-      console.log('mySHOEFITTER Event:', event);
-    });
-
-    const myshoefitter = new MyShoefitter({
-      shopId: '64be733131ccc3b6d79c',
-      productId: 'GND-210055-01-H'
-    });
-    myshoefitter.events(event => {
-      console.log('mySHOEFITTER Event:', event);
     });
   </script>
 

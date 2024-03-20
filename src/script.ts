@@ -16,6 +16,8 @@ class MyShoefitter {
     : 'https://dialog.myshoefitter.com';
   // Shop systems width available adapters
   private readonly supportedShopSystems = ['woocommerce', 'shopify', 'magento', 'shopware', 'oxid', 'prestashop', 'bigcommerce', 'dc', 'custom'];
+  // Callback for events
+  private callback?: (event: CustomEvent) => void;
 
   /**
    * Initialize the Script
@@ -58,6 +60,11 @@ class MyShoefitter {
     this.addButtonClickListener();
     this.trackEvent('Button Load');
 
+    this.emit({
+      type: EventTypes.Init,
+      data: config
+    });
+
     console.log('mySHOEFITTER Config:', config);
     console.log('mySHOEFITTER Session ID:', this.params.sessionId);
   }
@@ -67,12 +74,7 @@ class MyShoefitter {
    * @param callback (event: string) => void
    */
   public events(callback: (event: CustomEvent) => void) {
-    window.addEventListener('message', (event) => {
-      if (event.origin !== this.bannerOrigin) {
-        return;
-      }
-      callback(event.data);
-    });
+    this.callback = callback;
   }
 
   /**
@@ -169,9 +171,6 @@ class MyShoefitter {
       };
     }
 
-    // Listen to close and resize events from iframe content
-    window.addEventListener('message', (event) => this.messageParser(event), false);
-
     // Show the dialog
     this.dialog.showModal();
   }
@@ -214,7 +213,22 @@ class MyShoefitter {
         event.preventDefault();
         this.showBanner();
         this.trackEvent('Banner Open');
+        this.initMessageEventListener();
       });
+    }
+  }
+
+  private initMessageEventListener() {
+    window.addEventListener('message', this.handleMessage);
+  }
+
+  private destroyMessageEventListener() {
+    window.removeEventListener('message', this.handleMessage);
+  }
+
+  private emit(event: CustomEvent): void {
+    if (this.callback) {
+      this.callback(event);
     }
   }
 
@@ -222,37 +236,26 @@ class MyShoefitter {
    * Listens to custom events from the iframe content
    * @param event MessageEvent
    */
-  private handleMessage(event: MessageEvent): void {
-    if (event.origin !== this.bannerOrigin) {
+  private handleMessage(event: MessageEvent<CustomEvent>): void {
+    if (!event?.origin?.includes('myshoefitter.com')) {
       return;
     }
-    switch (event.data) {
-      case 'CLOSE_BANNER':
-        this.closeBanner();
-        break;
-    }
-  }
-
-  /**
-   * Parses custom events from the iframe content
-   * @param event MessageEvent
-   */
-  private messageParser(event: MessageEvent) {
-    if (event.origin !== this.bannerOrigin) {
-      return;
-    }
-
-    if (event.data.type && event.data.type === 'iframeScrollHeight') {
-      const iframe = this.dialog?.children[0] as HTMLIFrameElement;
-      iframe.height = event.data.height;
-      if (this.dialog) {
+    // Emit all data to make it usable for the shop
+    this.emit(event.data);
+    // Listen for banner close event
+    if (event?.data?.type === 'BANNER' && event?.data?.data?.action === 'close') {
+      this.closeBanner();
+      this.destroyMessageEventListener();
+    } else if (event?.data?.type === 'BANNER' && event?.data?.data?.action === 'resize') {
+      const iframe = this.dialog?.children?.item(0) as HTMLIFrameElement;
+      if (this.dialog?.style && iframe) {
+        iframe.height = event?.data?.data?.height;
         this.dialog.style.height = iframe.height + "px";
         this.dialog.style.width = iframe.width + "px";
       }
-    } else {
-      this.handleMessage(event);
     }
   }
+
 
   /**
    * Track script load event in Pirsch
@@ -348,10 +351,15 @@ interface BannerParams extends ScriptConfig {
 
 interface CustomEvent {
   type: EventTypes;
-  message: string | number;
+  data: any;
 }
 
-type EventTypes = 'result';
+enum EventTypes {
+  Init = 'INIT',
+  Result = 'RESULT',
+  PageView = 'PAGE_VIEW',
+  Banner = 'BANNER'
+}
 
 // Expose class to parent page
 window.myshoefitter = new MyShoefitter();
