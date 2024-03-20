@@ -11,9 +11,7 @@ class MyShoefitter {
   // The params for the banner
   private params: BannerParams | null = null;
   // Banner Origin
-  private readonly bannerOrigin = this.isDev()
-    ? 'http://localhost:4321'
-    : 'https://dialog.myshoefitter.com';
+  private bannerOrigin = 'https://dialog.myshoefitter.com';
   // Shop systems width available adapters
   private readonly supportedShopSystems = ['woocommerce', 'shopify', 'magento', 'shopware', 'oxid', 'prestashop', 'bigcommerce', 'dc', 'custom'];
   // Callback for events
@@ -25,6 +23,11 @@ class MyShoefitter {
    */
   public init(config: ScriptConfig): void {
     this.config = config;
+
+    // Override the default banner url
+    if (typeof config?.bannerUrl === 'string') {
+      this.bannerOrigin = config.bannerUrl;
+    }
 
     // Show warning if shop id is missing - shop id is important for tracking
     if (!config?.shopId) {
@@ -331,10 +334,6 @@ class MyShoefitter {
       this.dialog.style.height = '370px';
     }
   }
-
-  private isDev(): boolean {
-    return window.location.hostname.includes('localhost') || window.location.protocol === 'file:';
-  }
 }
 
 interface ScriptConfig {
@@ -343,6 +342,7 @@ interface ScriptConfig {
   logsEnabled?: boolean;
   buttonSelector?: string;
   shopSystem?: string;
+  bannerUrl?: boolean; // Override the default banner url
 }
 
 interface BannerParams extends ScriptConfig {
