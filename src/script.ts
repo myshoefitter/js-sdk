@@ -169,9 +169,6 @@ class MyShoefitter {
 
       // Append the dialog to the body
       document.body.appendChild(this.dialog);
-      iframe.onload = () => {
-        this.hideLoader();
-      };
     }
 
     // Show the dialog
@@ -185,10 +182,6 @@ class MyShoefitter {
     if (this.config && this.dialog) {
       this.dialog.close();
       this.trackEvent('Banner Close');
-
-      // Remove event listeners
-      window.removeEventListener('message', (event) => this.handleMessage(event), false);
-      window.removeEventListener('resize', () => this.setDialogSize(), false);
     } else {
       console.warn('mySHOEFITTER is not initialized');
     }
@@ -222,13 +215,17 @@ class MyShoefitter {
   }
 
   private initMessageEventListener() {
-    window.addEventListener('message', this.handleMessage);
+    window.addEventListener('message', (event) => this.handleMessage(event));
   }
 
   private destroyMessageEventListener() {
-    window.removeEventListener('message', this.handleMessage);
+    window.removeEventListener('message', (event) => this.handleMessage(event));
   }
 
+  /**
+   * Emit custom events through the callback to the parent page
+   * @param event CustomEvent
+   */
   private emit(event: CustomEvent): void {
     if (this.callback) {
       this.callback(event);
@@ -240,7 +237,8 @@ class MyShoefitter {
    * @param event MessageEvent
    */
   private handleMessage(event: MessageEvent<CustomEvent>): void {
-    if (!event?.origin?.includes('myshoefitter.com')) {
+    // Block all unwanted events
+    if (!event?.origin?.includes('myshoefitter.com') || !event?.data?.type || !event?.data?.data) {
       return;
     }
     // Emit all data to make it usable for the shop
@@ -249,16 +247,20 @@ class MyShoefitter {
     if (event?.data?.type === 'BANNER' && event?.data?.data?.action === 'close') {
       this.closeBanner();
       this.destroyMessageEventListener();
-    } else if (event?.data?.type === 'BANNER' && event?.data?.data?.action === 'resize') {
+    } else if (event?.data?.type === 'BANNER' && (event?.data?.data?.action === 'resize' || event?.data?.data?.action === 'load')) {
+      // Resize iframe to fit content
       const iframe = this.dialog?.children?.item(0) as HTMLIFrameElement;
       if (this.dialog?.style && iframe) {
         iframe.height = event?.data?.data?.height;
         this.dialog.style.height = iframe.height + "px";
         this.dialog.style.width = iframe.width + "px";
       }
+      // Hide loading spinner
+      if (event?.data?.data?.action === 'load') {
+        this.hideLoader();
+      }
     }
   }
-
 
   /**
    * Track script load event in Pirsch
