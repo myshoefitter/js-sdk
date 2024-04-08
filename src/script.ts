@@ -298,6 +298,7 @@ class MyShoefitter {
       case 'dc':
         return dc.findProductId();
       case 'magento':
+        magento.injectButton();
         return magento.findProductId();
       default:
         return null;
