@@ -1,4 +1,4 @@
-import { dc } from './shop-adapters/index';
+import { dc, magento } from './shop-adapters/index';
 
 /**
  * Represents a service with functionalities related to a product.
@@ -297,6 +297,8 @@ class MyShoefitter {
     switch (shopSystem) {
       case 'dc':
         return dc.findProductId();
+      case 'magento':
+        return magento.findProductId();
       default:
         return null;
     }
