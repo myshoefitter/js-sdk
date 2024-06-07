@@ -31,7 +31,7 @@ class MyShoefitter {
 
     // Show warning if shop id is missing - shop id is important for tracking
     if (!config?.shopId) {
-      console.error('mySHOEFITTER: Please provide shopId!');
+      config.shopId = this.getHostname(); // On PWA V2, the hostname will be used to identify the shop
     }
 
     // Show error if productId and shopSystem are missing - pwa will not work without these parameters
@@ -338,6 +338,20 @@ class MyShoefitter {
     return config;
   }
 
+  private getHostname() {
+    try {
+      const url = new URL(this.getCurrentUrl());
+      const hostname = url.hostname;
+      return hostname;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  private getCurrentUrl() {
+    return window.location.href;
+  }
+
   /**
    * Generate a unique session ID
    * @returns Session ID
@@ -408,7 +422,7 @@ class MyShoefitter {
 }
 
 interface ScriptConfig {
-  shopId: string; // @deprecated
+  shopId: string | null; // @deprecated
   productId?: string | number;
   logsEnabled?: boolean;
   shopSystem?: string;
