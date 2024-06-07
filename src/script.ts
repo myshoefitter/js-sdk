@@ -1,4 +1,4 @@
-import { dc, magento } from './shop-adapters/index';
+import { dc, magento, shopify } from './shop-adapters/index';
 
 /**
  * Represents a service with functionalities related to a product.
@@ -44,9 +44,11 @@ class MyShoefitter {
     }
 
     // Check if the Shop System is supported and find the Product ID automatically
-    if (!config?.productId && config?.shopSystem && this.supportedShopSystems.includes(config.shopSystem)) {
-      config.productId = this.findProductId(config.shopSystem);
-      if (config.productId) {
+    if (config?.shopSystem && this.supportedShopSystems.includes(config.shopSystem)) {
+      const { sku } = this.getShopSystemConfig(config.shopSystem);
+
+      if (!config?.productId && sku) {
+        config.productId = sku;
         console.log(`mySHOEFITTER: Product ID found: ${config.productId}`);
       } else {
         console.error('mySHOEFITTER: Product ID could not be found! Please set it manually using productId parameter.');
@@ -60,7 +62,7 @@ class MyShoefitter {
         utm_source: window?.location.hostname // Don't remove or encrypt! Needed for Analytics!
       });
 
-    this.addButtonClickListener();
+    this.addButton();
     this.trackEvent('Button Load');
 
     this.emit({
@@ -202,8 +204,22 @@ class MyShoefitter {
   /**
    * Find the button in html and add click listener
    */
-  private addButtonClickListener(): void {
-    const button = document.getElementById('myshoefitter-button');
+  private addButton(): void {
+    let button = document.getElementById('myshoefitter-button');
+
+    const attachTo = this.config?.button?.attachTo;
+    const position = this.config?.button?.position || 'after';
+    const shopSystem = this.config?.shopSystem;
+
+    if (!button && attachTo) {
+      button = this.injectButton(attachTo, position);
+      console.log(`mySHOEFITTER: Button injected ${position}: ${attachTo}`);
+    } else if (!button && shopSystem) {
+      const { selector } = this.getShopSystemConfig(shopSystem);
+      button = this.injectButton(selector, position);
+      console.log(`mySHOEFITTER: Button injected ${position}: ${selector}`);
+    }
+  
     if (button) {
       button.addEventListener('click', (event: Event) => {
         event.preventDefault();
@@ -211,6 +227,8 @@ class MyShoefitter {
         this.trackEvent('Banner Open');
         this.initMessageEventListener();
       });
+    } else {
+      console.error(`mySHOEFITTER: Please add 'button' property to the config object or paste button html code manually into your template.`);
     }
   }
 
@@ -293,16 +311,31 @@ class MyShoefitter {
     }
   }
 
-  private findProductId(shopSystem: string) {
+  private getShopSystemConfig(shopSystem: string): ShopSystemConfig {
+
+    const config: ShopSystemConfig = {
+      sku: null,
+      selector: ''
+    };
+
     switch (shopSystem) {
-      case 'dc':
-        return dc.findProductId();
-      case 'magento':
-        magento.injectButton();
-        return magento.findProductId();
-      default:
-        return null;
+      case 'dc': {
+        config.sku = dc.findProductId();
+        break;
+      }
+      case 'magento': {
+        config.selector = magento.getCartButtonSelector();
+        config.sku = magento.findProductId();
+        break;
+      }
+      case 'shopify': {
+        config.selector = shopify.getCartButtonSelector();
+        config.sku = shopify.findProductId();
+        break;
+      }
     }
+
+    return config;
   }
 
   /**
@@ -339,15 +372,51 @@ class MyShoefitter {
       this.dialog.style.height = '370px';
     }
   }
+
+  /**
+   * Automatically injects the myshoefitter button into the dom
+   *
+   * @param attachTo css selector of the element the button will be attached to
+   * @param position place button before or after the element
+   */
+  private injectButton(attachTo: string, position: ButtonPosition = 'after') {
+    // Select the existing button
+    const addToCartButton: HTMLElement | null = document.querySelector(attachTo);
+  
+    if (addToCartButton) {
+      // Create a new button element
+      const mysfButton: HTMLButtonElement = document.createElement('button');
+  
+      // Set properties on the new button
+      mysfButton.id = 'myshoefitter-button'; // Set the button id
+      mysfButton.textContent = 'Größe finden'; // Set the button text
+      mysfButton.type = 'button'; // Set the button type
+      // Add any other attributes or event listeners to the new button as needed
+  
+      // Insert the new button before or after the existing button in the DOM
+      if (position === 'before') {
+        addToCartButton.parentNode?.insertBefore(mysfButton, addToCartButton);
+      } else if (position === 'after') {
+        // For inserting after, use the existing button's nextSibling as the reference node
+        // If nextSibling is null, the new button will simply be added as the last child
+        addToCartButton.parentNode?.insertBefore(mysfButton, addToCartButton.nextSibling);
+      }
+    }
+
+    return addToCartButton;
+  }
 }
 
 interface ScriptConfig {
-  shopId: string;
-  productId?: string;
+  shopId: string; // @deprecated
+  productId?: string | number;
   logsEnabled?: boolean;
-  buttonSelector?: string;
   shopSystem?: string;
   bannerUrl?: boolean; // Override the default banner url
+  button?: {
+    attachTo: string;
+    position?: ButtonPosition;
+  }
 }
 
 interface BannerParams extends ScriptConfig {
@@ -373,4 +442,11 @@ declare global {
   interface Window {
     myshoefitter: MyShoefitter;
   }
+}
+
+type ButtonPosition = 'before' | 'after';
+
+interface ShopSystemConfig {
+  sku: string | number | null;
+  selector: string;
 }
