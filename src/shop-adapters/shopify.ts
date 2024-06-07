@@ -10,6 +10,8 @@ export function trackConversion() {
   // Will be used later to send the checkout event to posthog
 }
 
+// --- Helper functions ---
+
 function extractSkuFromWindowObject(): number | undefined {
   return window?.ShopifyAnalytics?.meta?.product?.id;
 }

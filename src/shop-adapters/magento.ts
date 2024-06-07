@@ -6,6 +6,14 @@ export function getCartButtonSelector() {
   return 'button[type="submit"][form="product_addtocart_form"]';
 }
 
+export function trackConversion() {
+  document.addEventListener('checkout_onepage_controller_success_action', (event) => {
+    console.log('Checkout success event caught:', event);
+  });
+}
+
+// --- Helper functions ---
+
 function extractSkuFromMetaTag(): string | null {
   const skuMeta = document?.querySelector('meta[itemprop="sku"]');
   return skuMeta ? skuMeta?.getAttribute('content') : null;
