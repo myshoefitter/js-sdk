@@ -408,21 +408,23 @@ class MyShoefitter {
   
       // Set properties on the new button
       mysfButton.id = 'myshoefitter-button'; // Set the button id
-      mysfButton.innerHTML = `Größe finden mit <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 20px; margin: 0 0 -4px 4px;" />`; // Set the button text
+      mysfButton.innerHTML = `Find size with <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 18px; margin: 0 0 -4px 4px;" />`; // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
       const styles: Partial<CSSStyleDeclaration> = {
         display: 'block',
         width: '100%',
+        maxWidth: '340px',
         background: 'none',
         color: 'black',
-        fontSize: '16px',
+        fontSize: '14px',
         fontWeight: '600',
         border: '2px solid rgb(255, 125, 79)',
         borderRadius: '5px',
+        outline: 'none',
         padding: '10px 20px',
         margin: '10px 0',
-        cursor: 'pointer'
+        cursor: 'pointer',
       };
 
       for (const [key, value] of Object.entries(styles)) {
