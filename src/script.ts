@@ -408,7 +408,7 @@ class MyShoefitter {
   
       // Set properties on the new button
       mysfButton.id = 'myshoefitter-button'; // Set the button id
-      mysfButton.innerHTML = `Find size with <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 18px; margin: 0 0 -4px 4px;" />`; // Set the button text
+      mysfButton.innerHTML = this.config?.button?.text || `Find size with <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 18px; margin: 0 0 -4px 4px;" />`; // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
       const styles: Partial<CSSStyleDeclaration> = {
@@ -457,6 +457,7 @@ interface ScriptConfig {
   button?: {
     attachTo: string;
     position?: ButtonPosition;
+    text?: string;
   }
 }
 
