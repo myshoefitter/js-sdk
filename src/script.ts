@@ -48,7 +48,7 @@ class MyShoefitter {
       const { sku } = this.getShopSystemConfig(config.shopSystem);
 
       if (!config?.productId && sku) {
-        config.productId = sku;
+        config.productId = String(sku);
         console.log(`mySHOEFITTER: Product ID found: ${config.productId}`);
       } else {
         console.error('mySHOEFITTER: Product ID could not be found! Please set it manually using productId parameter.');
@@ -211,7 +211,7 @@ class MyShoefitter {
     }
 
     // Only show button on enabled products
-    if (this.config?.enabledProductIds?.length && !this.config?.enabledProductIds?.includes(this.config.productId)) {
+    if (this.config?.enabledProductIds?.length && !this.config?.enabledProductIds?.includes(String(this.config.productId))) {
       console.log('mySHOEFITTER: Button hidden on Product', this.config?.productId);
       return;
     }
