@@ -205,6 +205,17 @@ class MyShoefitter {
    * Find the button in html and add click listener
    */
   private addButton(): void {
+
+    if (!this.config?.productId) {
+      return;
+    }
+
+    // Only show button on enabled products
+    if (this.config?.enabledProductIds?.length && !this.config?.enabledProductIds?.includes(this.config.productId)) {
+      console.log('mySHOEFITTER: Button hidden on Product', this.config?.productId);
+      return;
+    }
+
     let button = document.getElementById('myshoefitter-button');
 
     const attachTo = this.config?.button?.attachTo;
@@ -450,7 +461,9 @@ class MyShoefitter {
 
 interface ScriptConfig {
   shopId: string | null; // @deprecated
-  productId?: string | number;
+  productId?: string | number; // Override the automatically found product id
+  enabledProductIds?: (string | number)[]; // Product Ids where button should show
+  disabledProductIds?: (string | number)[]; // Product Ids where button should be hidden
   logsEnabled?: boolean;
   shopSystem?: string;
   bannerUrl?: boolean; // Override the default banner url
