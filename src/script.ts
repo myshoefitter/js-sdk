@@ -414,7 +414,6 @@ class MyShoefitter {
       const styles: Partial<CSSStyleDeclaration> = {
         display: 'block',
         width: '100%',
-        maxWidth: '340px',
         background: 'none',
         color: 'black',
         fontSize: '14px',
