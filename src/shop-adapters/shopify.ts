@@ -3,7 +3,9 @@ export function findProductId() {
 }
 
 export function getCartButtonSelector() {
-  return '.product-form__cart-submit';
+  const selectors = ['.product-form__submit', '.product-form__cart-submit'];
+  const button = selectors.find(selector => document.querySelector(selector));
+  return button;
 }
 
 export function trackConversion() {
