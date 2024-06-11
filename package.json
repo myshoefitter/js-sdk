@@ -8,6 +8,7 @@
   "scripts": {
     "build": "bun build ./src/script.ts --outdir ./dist/v1 --minify-whitespace --minify-syntax && cp _redirects ./dist",
     "dev": "bun build ./src/script.ts --outdir ./dist/v1 --minify-whitespace --minify-syntax --watch",
+    "server": "bun run ./src/server.ts",
     "lint": "eslint 'src/**/*.ts'",
     "prettier": "prettier --write 'src/**/*.ts'"
   },
