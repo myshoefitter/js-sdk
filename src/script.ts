@@ -437,6 +437,11 @@ class MyShoefitter {
         cursor: 'pointer',
       };
 
+      // Merge styles from config into the default styles
+      if (this.config?.button?.styles) {
+        Object.assign(styles, this.config.button.styles);
+      }
+
       for (const [key, value] of Object.entries(styles)) {
         mysfButton.style[key as any] = value as string;
       }
@@ -471,6 +476,7 @@ interface ScriptConfig {
     attachTo: string;
     position?: ButtonPosition;
     text?: string;
+    styles?: Partial<CSSStyleDeclaration>;
   }
 }
 
