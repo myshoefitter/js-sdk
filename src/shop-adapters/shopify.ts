@@ -5,7 +5,7 @@ export function findProductId() {
 export function getCartButtonSelector() {
   const selectors = ['.product-form__submit', '.product-form__cart-submit'];
   const button = selectors.find(selector => document.querySelector(selector));
-  return button;
+  return button as string;
 }
 
 export function trackConversion() {
