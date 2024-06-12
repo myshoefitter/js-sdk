@@ -422,7 +422,7 @@ class MyShoefitter {
       mysfButton.innerHTML = this.config?.button?.text || `Find size with <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 18px; margin: 0 0 -4px 4px;" />`; // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
-      const styles: Partial<CSSStyleDeclaration> = {
+      let styles: Partial<CSSStyleDeclaration> = {
         display: 'block',
         width: '100%',
         background: 'none',
@@ -439,7 +439,7 @@ class MyShoefitter {
 
       // Merge styles from config into the default styles
       if (this.config?.button?.styles) {
-        Object.assign(styles, this.config.button.styles);
+        styles = { ...styles, ...this.config.button.styles }
       }
 
       for (const [key, value] of Object.entries(styles)) {
