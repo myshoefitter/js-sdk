@@ -169,8 +169,8 @@ class MyShoefitter {
       // Append the iframe to the dialog
       this.dialog.appendChild(iframe);
 
-      // Append the dialog to the body
-      document.body.appendChild(this.dialog);
+      // Append the dialog to the body beginning of the body
+      document.body.insertBefore(this.dialog, document.body.firstChild);
     }
 
     // Show the dialog
