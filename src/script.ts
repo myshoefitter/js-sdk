@@ -159,17 +159,8 @@ class MyShoefitter {
       loader.style.top = 'calc(50% - 25px)';
       loader.style.left = 'calc(50% - 25px)';
       loader.style.zIndex = '10000';
-      loader.innerHTML = `
-        <style>
-        .myshoefitter-loader {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        </style>
-      `;
+      loader.style.animation = 'spin 1s linear infinite';
+      loader.innerHTML = `<style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>`;
 
       // Append the loader to the dialog
       this.dialog.appendChild(loader);
