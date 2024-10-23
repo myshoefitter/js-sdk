@@ -375,7 +375,7 @@ class MyShoefitter {
 
   private getHostname() {
     try {
-      const url = new URL('https://www.groundies.com/de/barfussschuhe-damen/groundies-sienna-women-braun.html');
+      const url = new URL(window.location.href);
       const hostname = url?.hostname;
       return hostname;
     } catch (error) {
