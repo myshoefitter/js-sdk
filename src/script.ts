@@ -107,6 +107,13 @@ class MyShoefitter {
    * Creates a new HTMLDialogElement and opens the Banner as an iFrame
    */
   public showBanner(): void {
+
+    const isDesktop = this.detectClient() === 'desktop';
+    if(!isDesktop) {
+      const link = this.generateBannerLink();
+      window.open(link)
+    }
+
     // Create the dialog element
     if (!this.dialog) {
       const isDesktop = this.detectClient() === 'desktop';
