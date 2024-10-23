@@ -298,7 +298,6 @@ class MyShoefitter {
       const iframe = this.dialog?.children?.item(0) as HTMLIFrameElement;
       const isDesktop = this.detectClient() === 'desktop';
       if (this.dialog?.style && iframe && isDesktop) {
-        console.log('mySHOEFITTER: Resize', event?.data?.data?.width, event?.data?.data?.height);
         iframe.height = event?.data?.data?.height;
         this.dialog.style.height = iframe.height + "px";
         this.dialog.style.width = iframe.width + "px";
