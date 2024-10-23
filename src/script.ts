@@ -5,13 +5,13 @@ import { dc, magento, shopify, woocommerce } from './shop-adapters/index';
  */
 class MyShoefitter {
   // The config to initialize the script
-  private config: ScriptConfig | null = null;
+  private config: ScriptConfig | undefined;
   // The dialog window
-  private dialog: HTMLDialogElement | null = null;
+  private dialog: HTMLDialogElement | undefined;
   // The params for the banner
-  private params: BannerParams | null = null;
+  private params: BannerParams | undefined;
   // Banner Origin
-  private bannerOrigin = 'https://dialog.myshoefitter.com';
+  private bannerOrigin = 'v2.myshoefitter.com'; // Do not include protocol or path!!!
   // Shop systems width available adapters
   private readonly supportedShopSystems = ['woocommerce', 'shopify', 'magento', 'shopware', 'oxid', 'prestashop', 'bigcommerce', 'dc', 'custom'];
   // Callback for events
@@ -25,14 +25,12 @@ class MyShoefitter {
     this.config = config;
 
     // Override the default banner url
-    if (typeof config?.bannerUrl === 'string') {
-      this.bannerOrigin = config.bannerUrl;
+    if (typeof config?.bannerOrigin === 'string') {
+      this.bannerOrigin = config.bannerOrigin;
     }
 
-    // Show warning if shop id is missing - shop id is important for tracking
-    if (!config?.shopId) {
-      config.shopId = this.getHostname(); // On PWA V2, the hostname will be used to identify the shop
-    }
+    // On PWA V2, the hostname will be used to identify the shop
+    config.shopId = this.getHostname();
 
     // Show error if productId and shopSystem are missing - pwa will not work without these parameters
     if (!config?.productId && !config?.shopSystem) {
@@ -55,15 +53,14 @@ class MyShoefitter {
       }
     }
 
-    this.params = Object.assign(config,
-      {
-        sessionId: this.generateSessionId(),
-        clientType: this.detectClient(),
-        utm_source: window?.location.hostname // Don't remove or encrypt! Needed for Analytics!
-      });
+    this.params = {
+      shop: config?.shopId,
+      product: config?.productId,
+      utm_source: window?.location?.hostname // Don't remove or encrypt! Needed for Analytics!
+    };
 
     this.addButton();
-    this.trackEvent('Button Load');
+    // this.trackEvent('Button Load');
 
     this.emit({
       type: EventTypes.Init,
@@ -71,7 +68,6 @@ class MyShoefitter {
     });
 
     console.log('mySHOEFITTER Config:', config);
-    console.log('mySHOEFITTER Session ID:', this.params.sessionId);
   }
 
   /**
@@ -113,24 +109,36 @@ class MyShoefitter {
   public showBanner(): void {
     // Create the dialog element
     if (!this.dialog) {
+      const isDesktop = this.detectClient() === 'desktop';
       this.dialog = document.createElement('dialog');
       this.dialog.id = 'myshoefitter-dialog';
+      this.dialog.style.margin = '0';
       this.dialog.style.padding = '0';
       this.dialog.style.border = 'none';
-      this.dialog.style.borderRadius = '25px';
       this.dialog.style.overflow = 'hidden';
-      this.dialog.style.maxWidth = '1200px';
-      this.dialog.style.minWidth = '375px';
-      this.dialog.style.top = '50%';
-      this.dialog.style.left = '50%';
-      this.dialog.style.transform = 'translate(-50%, -50%)';
-      this.setDialogSize();
+      this.dialog.style.maxHeight = 'unset';
+      this.dialog.style.maxWidth = 'unset';
+
+      if (isDesktop) {
+        this.dialog.style.width = '80%';
+        this.dialog.style.maxWidth = '1200px';
+        this.dialog.style.height = '370px';
+        this.dialog.style.borderRadius = '25px';
+        this.dialog.style.maxWidth = '1200px';
+        this.dialog.style.minWidth = '375px';
+        this.dialog.style.top = '50%';
+        this.dialog.style.left = '50%';
+        this.dialog.style.transform = 'translate(-50%, -50%)';
+      } else {
+        this.dialog.style.width = '100vw';
+        this.dialog.style.height = '100vh';
+      }
 
       // Create the iframe element
       const iframe = document.createElement('iframe');
+      iframe.allow = 'camera; microphone; autoplay';
       iframe.src = this.generateBannerLink();
       iframe.scrolling = 'no';
-      iframe.style.maxWidth = '1200px';
       iframe.style.width = '100%';
       iframe.style.height = '100%';
       iframe.style.border = 'none';
@@ -194,11 +202,28 @@ class MyShoefitter {
    * @returns https://dialog.myshoefitter.com/?....
    */
   private generateBannerLink(): string {
-    if (!this.config?.productId || !this.params) {
+    if (!this.config?.productId) {
       console.warn('mySHOEFITTER: No productId found!')
       return '';
     }
-    return this.bannerOrigin + '/?' + new URLSearchParams(this.params as unknown as Record<string, string>).toString();
+
+    const protocol = this.bannerOrigin.includes('localhost') ? 'http' : 'https';
+    let bannerHost = protocol + '://' + this.bannerOrigin;
+
+    const clientType = this.detectClient();
+    // Open banner on desktop if client is desktop.
+    // Open pwa on mobile and tablet
+    if (clientType === 'desktop') {
+      bannerHost = bannerHost + '/desktop';
+    } else if (this.params?.product) {
+      // If product is set, open camera. Oherwise open home page.
+      bannerHost = bannerHost + '/camera';
+    }
+
+    const url = bannerHost + '/?' + new URLSearchParams(this.params as unknown as Record<string, string>).toString();
+    console.log('mySHOEFITTER: Banner URL', url);
+
+    return url;
   }
 
   /**
@@ -266,8 +291,9 @@ class MyShoefitter {
    * @param event MessageEvent
    */
   private handleMessage(event: MessageEvent<CustomEvent>): void {
+    console.log('mySHOEFITTER: Event', event.data);
     // Block all unwanted events
-    if (!event?.origin?.includes('myshoefitter.com') || !event?.data?.type || !event?.data?.data) {
+    if (!event?.origin?.includes(this.bannerOrigin) || !event?.data?.type || !event?.data?.data) {
       return;
     }
     // Emit all data to make it usable for the shop
@@ -279,7 +305,9 @@ class MyShoefitter {
     } else if (event?.data?.type === 'BANNER' && (event?.data?.data?.action === 'resize' || event?.data?.data?.action === 'load')) {
       // Resize iframe to fit content
       const iframe = this.dialog?.children?.item(0) as HTMLIFrameElement;
-      if (this.dialog?.style && iframe) {
+      const isDesktop = this.detectClient() === 'desktop';
+      if (this.dialog?.style && iframe && isDesktop) {
+        console.log('mySHOEFITTER: Resize', event?.data?.data?.width, event?.data?.data?.height);
         iframe.height = event?.data?.data?.height;
         this.dialog.style.height = iframe.height + "px";
         this.dialog.style.width = iframe.width + "px";
@@ -298,13 +326,13 @@ class MyShoefitter {
   private async trackEvent(eventName: string) {
 
     // Don't send request on localhost
-    if ((/^localhost(.*)$|^127(\.[0-9]{1,3}){3}$/is.test(location.hostname) || location.protocol === "file:")) {
-      console.info("Pirsch is ignored on localhost. Add the data-dev attribute to enable it.");
-    }
+    // if ((/^localhost(.*)$|^127(\.[0-9]{1,3}){3}$/is.test(location.hostname) || location.protocol === "file:")) {
+    //   console.info("Pirsch is ignored on localhost. Add the data-dev attribute to enable it.");
+    // }
 
     const data = {
       identification_code: 'kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy',
-      url: this.bannerOrigin,
+      url: 'https://' + this.bannerOrigin,
       title: document.title,
       referrer: encodeURIComponent(location.href),
       screen_width: screen.width,
@@ -356,51 +384,16 @@ class MyShoefitter {
 
   private getHostname() {
     try {
-      const url = new URL(this.getCurrentUrl());
-      const hostname = url.hostname;
+      const url = new URL('https://www.groundies.com/de/barfussschuhe-damen/groundies-sienna-women-braun.html');
+      const hostname = url?.hostname;
       return hostname;
     } catch (error) {
-      return null;
+      return undefined;
     }
   }
 
   private getCurrentUrl() {
     return window.location.href;
-  }
-
-  /**
-   * Generate a unique session ID
-   * @returns Session ID
-   * @see https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid
-   */
-  private generateSessionId() {
-    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-      (parseInt(c, 10) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> parseInt(c, 10) / 4).toString(16)
-    );
-  }
-
-  private setDialogSize(): void {
-
-    if (!this.dialog) {
-      return;
-    }
-
-    const screenWidth = window.innerWidth;
-
-    if (screenWidth <= 768) {
-      // Mobile devices
-      this.dialog.style.width = '95%';
-      this.dialog.style.height = '85vh';
-    } else if (screenWidth > 768 && screenWidth <= 1024) {
-      // Tablets
-      this.dialog.style.width = '90%';
-      this.dialog.style.height = '70vh';
-    } else {
-      // Desktop
-      this.dialog.style.width = '80%';
-      this.dialog.style.maxWidth = '1200px';
-      this.dialog.style.height = '370px';
-    }
   }
 
   /**
@@ -465,13 +458,13 @@ class MyShoefitter {
 }
 
 interface ScriptConfig {
-  shopId: string | null; // @deprecated
+  shopId?: string; // @deprecated
   productId?: string | number; // Override the automatically found product id
   enabledProductIds?: (string | number)[]; // Product Ids where button should show
   disabledProductIds?: (string | number)[]; // Product Ids where button should be hidden
   logsEnabled?: boolean;
   shopSystem?: string;
-  bannerUrl?: boolean; // Override the default banner url
+  bannerOrigin?: boolean; // Override the default banner url
   button?: {
     attachTo: string;
     position?: ButtonPosition;
@@ -480,8 +473,10 @@ interface ScriptConfig {
   }
 }
 
-interface BannerParams extends ScriptConfig {
-  sessionId: string;
+interface BannerParams {
+  shop?: string;
+  product?: string | number;
+  utm_source?: string;
 }
 
 interface CustomEvent {
