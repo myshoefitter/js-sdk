@@ -130,8 +130,8 @@ class MyShoefitter {
         this.dialog.style.left = '50%';
         this.dialog.style.transform = 'translate(-50%, -50%)';
       } else {
-        this.dialog.style.width = '100vw';
-        this.dialog.style.height = '100vh';
+        this.dialog.style.width = '100%';
+        this.dialog.style.height = '100%';
       }
 
       // Create the iframe element
