@@ -31,7 +31,13 @@ class MyShoefitter {
 
     // On PWA V2, the hostname will be used to identify the shop
     config.shopId = this.getHostname();
-    
+
+    // Overwrite settings for groundies
+    if (config.shopId?.includes('groundies.com')) {
+      config.shopSystem = 'oxid';
+      config.productId = undefined;
+    }    
+
     // Show error if productId and shopSystem are missing - pwa will not work without these parameters
     if (!config?.productId && !config?.shopSystem) {
       console.error('mySHOEFITTER: Please provide either productId or shopSystem!');
