@@ -31,7 +31,7 @@ class MyShoefitter {
 
     // On PWA V2, the hostname will be used to identify the shop
     config.shopId = this.getHostname();
-
+    
     // Show error if productId and shopSystem are missing - pwa will not work without these parameters
     if (!config?.productId && !config?.shopSystem) {
       console.error('mySHOEFITTER: Please provide either productId or shopSystem!');
@@ -128,10 +128,10 @@ class MyShoefitter {
 
       if (isDesktop) {
         this.dialog.style.width = '80%';
-        this.dialog.style.maxWidth = '1200px';
+        this.dialog.style.maxWidth = '900px';
         this.dialog.style.height = '370px';
         this.dialog.style.borderRadius = '25px';
-        this.dialog.style.maxWidth = '1200px';
+        this.dialog.style.maxWidth = '900px';
         this.dialog.style.minWidth = '375px';
         this.dialog.style.top = '50%';
         this.dialog.style.left = '50%';
@@ -304,10 +304,9 @@ class MyShoefitter {
       // Resize iframe to fit content
       const iframe = this.dialog?.children?.item(0) as HTMLIFrameElement;
       const isDesktop = this.detectClient() === 'desktop';
-      if (this.dialog?.style && iframe && isDesktop) {
-        iframe.height = event?.data?.data?.height;
-        this.dialog.style.height = iframe.height + "px";
-        this.dialog.style.width = iframe.width + "px";
+      if (this.dialog?.style && iframe && isDesktop && event.data.data.height && event.data.data.width) {
+        this.dialog.style.height = event.data.data.height + "px";
+        this.dialog.style.width = event.data.data.width + "px";
       }
       // Hide loading spinner
       if (event?.data?.data?.action === 'load') {
