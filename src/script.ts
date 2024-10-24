@@ -117,7 +117,8 @@ class MyShoefitter {
     const isDesktop = this.detectClient() === 'desktop';
     if(!isDesktop) {
       const link = this.generateBannerLink();
-      window.open(link)
+      window.open(link);
+      return;
     }
 
     // Create the dialog element
