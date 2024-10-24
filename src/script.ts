@@ -218,7 +218,7 @@ class MyShoefitter {
       bannerHost = bannerHost + '/camera';
     }
 
-    const url = bannerHost + '/?' + new URLSearchParams(this.params as unknown as Record<string, string>).toString();
+    const url = bannerHost + '?' + new URLSearchParams(this.params as unknown as Record<string, string>).toString();
     console.log('mySHOEFITTER: Banner URL', url);
 
     return url;
