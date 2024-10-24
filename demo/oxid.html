@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>JS SDK Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 
+    Script searches for the meta tag with itemprop="sku" and extracts the sku.
+   -->
+  <!-- <meta itemprop="sku" content="GND-210055-01-H" /> -->
+</head>
+
+<body>
+
+  <button id="myshoefitter-button">Größe Finden</button>
+
+  <script>
+    if (typeof facebookOptOut !== 'undefined' && !facebookOptOut) {
+      let payload = {
+        currency: 'EUR',
+        value: Number('129.9'),
+        content_type: 'product_group',
+        content_ids: '2b84cc9e609f850e26b90225d6c9177b',
+      };
+
+
+      fbq('track', 'ViewContent', payload);
+    }
+
+    function trackAddToCart() {
+      if (typeof facebookOptOut !== 'undefined' && !facebookOptOut) {
+        let payload = {
+          currency: 'EUR',
+          value: Number('129.9'),
+          content_ids: 'GND-210256-22-H',
+        };
+
+
+
+        fbq('track', 'AddToCart', payload);
+      }
+    }
+  </script>
+
+  <script>
+    if (typeof facebookOptOut !== 'undefined' && !facebookOptOut) {
+      let payload = {
+        currency: 'EUR',
+        value: Number('129.9'),
+        content_type: 'product_group',
+        content_ids: '2b84cc9e609f850e26b90225d6c9177b',
+      };
+
+      fbq('track', 'ViewContent', payload);
+    }
+
+    function trackAddToCart() {
+      if (typeof facebookOptOut !== 'undefined' && !facebookOptOut) {
+        let payload = {
+          currency: 'EUR',
+          value: Number('129.9'),
+          content_ids: 'GND-210256-22-H',
+        };
+
+
+        fbq('track', 'AddToCart', payload);
+      }
+    }
+  </script>
+
+  <script type="text/javascript">
+
+    let viewalsobought = {
+      'currencyCode': 'EUR',
+      'impressions': [{
+
+        'name': 'GROUNDIES® Galaxy Men',
+        'id': 'GND-210233-01-H',
+        'price': '117.56',
+        'brand': 'GROUNDIES®',
+        'item_category': 'Herren',
+        'item_category_2': 'Alle Modelle',
+        'category_3': 'Barefoot',
+        'category_4': 'SS2024',
+        'variant': 'schwarz',
+        'variant_2': '',
+        'list': 'Herren/Alle Modelle',
+        'image': '/out/pictures/generated/product/1/1000_628_85/gnd-210233-01-h_pic1.jpg',
+        'url': 'https://www.groundies.com/de/barfussschuhe-herren/alle-modelle/groundies-galaxy-men-schwarz.html'
+      }, {
+
+        'name': 'GROUNDIES® Universe Men',
+        'id': 'GND-210055-37-H',
+        'price': '109.16',
+        'brand': 'GROUNDIES®',
+        'item_category': 'Herren',
+        'item_category_2': 'Alle Modelle',
+        'category_3': 'Barefoot',
+        'category_4': 'SS2024',
+        'variant': 'schwarz/weiß',
+        'variant_2': '',
+        'list': 'Herren/Alle Modelle',
+        'image': '/out/pictures/generated/product/1/1000_628_85/gnd-210055-37-h_pic1.jpg',
+        'url': 'https://www.groundies.com/de/barfussschuhe-herren/alle-modelle/groundies-universe-men-schwarz-weiss.html'
+      }, {
+      }]
+    };
+    // details
+    let ecommercedetail = {
+      'detail': {
+        'actionField': {
+          'products': [{
+            'name': 'GROUNDIES® Hamptons 2.0 Men',
+            'id': 'GND-210256-22-H',
+            'gtmPrice': '109.16',
+            'brand': 'GROUNDIES®',
+            'category': 'Herren',
+            'variant': 'weiß/blau',
+            'variant_2': ' '
+          }]
+        }
+      }
+    };
+
+    addToDataLayer('', ecommercedetail);
+    let gtmviewitem = {
+      'items': [{
+        'item_name': 'GROUNDIES® Hamptons 2.0 Men',
+        'item_id': 'GND-210256-22-H',
+        'gtmPrice': '109.16',
+        'item_brand': 'GROUNDIES®',
+        'item_category': 'Herren',
+        'item_category_2': 'Alle Modelle',
+        'item_category_3': 'Regular',
+        'item_category_4': 'AW2024',
+        'item_variant': 'weiß/blau',
+        'item_variant_2': ''
+      }]
+    };
+    addToDataLayer('view_item', gtmviewitem);
+  </script>
+
+
+  <script
+    type="text/javascript">var _paq = _paq || []; _paq.push(["setEcommerceView", "GND-210256-22-H", "GROUNDIES\u00ae Hamptons 2.0 Men", "Alle Modelle"]); _paq.push(["trackPageView"]); _paq.push(["enableLinkTracking"]); _paq.push(["setTrackerUrl", "https:\/\/piwik.makaira.io\/piwik.php"]); _paq.push(["setSiteId", "55"]); var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0]; g.type = 'text/javascript'; g.defer = true; g.async = true; g.src = "https:\/\/piwik.makaira.io" + '/piwik.js'; s.parentNode.insertBefore(g, s);</script>
+
+
+  <!-- It should be added just before the </body> tag. -->
+  <!-- <script src="https://js.myshoefitter.com/v1/script.js"></script> -->
+  <script src="../dist/v1/script.js"></script>
+  <script type="application/javascript">
+    myshoefitter.events(event => {
+      console.log('mySHOEFITTER Event:', event);
+    });
+    myshoefitter.init({
+      shopSystem: 'oxid',
+      button: {
+        position: 'before'
+      }
+    });
+  </script>
+
+</body>
+
+</html>

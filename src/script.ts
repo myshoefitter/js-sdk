@@ -1,4 +1,4 @@
-import { dc, magento, shopify, woocommerce } from './shop-adapters/index';
+import { dc, magento, shopify, woocommerce, oxid } from './shop-adapters/index';
 
 /**
  * Represents a service with functionalities related to a product.
@@ -327,6 +327,8 @@ class MyShoefitter {
    */
   private async trackEvent(eventName: string) {
 
+    return;
+
     // Don't send request on localhost
     // if ((/^localhost(.*)$|^127(\.[0-9]{1,3}){3}$/is.test(location.hostname) || location.protocol === "file:")) {
     //   console.info("Pirsch is ignored on localhost. Add the data-dev attribute to enable it.");
@@ -377,6 +379,10 @@ class MyShoefitter {
       case 'woocommerce': {
         config.selector = woocommerce.getCartButtonSelector();
         config.sku = woocommerce.findProductId();
+        break;
+      }
+      case 'oxid': {
+        config.sku = oxid.findProductId();
         break;
       }
     }
