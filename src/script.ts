@@ -249,7 +249,7 @@ class MyShoefitter {
     let button = document.getElementById('myshoefitter-button');
 
     const attachTo = this.config?.button?.attachTo;
-    const position = this.config?.button?.position || 'after';
+    const position = this.config?.button?.position || 'before';
     const shopSystem = this.config?.shopSystem;
 
     if (!button && attachTo) {
