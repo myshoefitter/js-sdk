@@ -3,7 +3,7 @@ export function findProductId() {
 }
 
 export function getCartButtonSelector() {
-  const selectors = ['.product-form__submit', '.product-form__cart-submit'];
+  const selectors = ['.product-form__submit', '.product-form__cart-submit', '.product-form__buttons'];
   const button = selectors.find(selector => document.querySelector(selector));
   return button as string;
 }
