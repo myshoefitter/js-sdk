@@ -429,6 +429,7 @@ class MyShoefitter {
         width: '100%',
         background: 'none',
         color: 'black',
+        fontFamily: 'inherit',
         fontSize: '14px',
         fontWeight: '600',
         border: '2px solid rgb(255, 125, 79)',
