@@ -135,8 +135,7 @@ class MyShoefitter {
 
       if (isDesktop) {
         this.dialog.style.width = '80%';
-        this.dialog.style.maxWidth = '900px';
-        this.dialog.style.height = '370px';
+        this.dialog.style.height = '400px';
         this.dialog.style.borderRadius = '25px';
         this.dialog.style.maxWidth = '900px';
         this.dialog.style.minWidth = '375px';
