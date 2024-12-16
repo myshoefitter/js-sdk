@@ -248,7 +248,7 @@ class MyShoefitter {
     let button = document.getElementById('myshoefitter-button');
 
     const attachTo = this.config?.button?.attachTo;
-    const position = this.config?.button?.position || 'before';
+    const position = this.config?.button?.position || 'after';
     const shopSystem = this.config?.shopSystem;
 
     if (!button && attachTo) {
@@ -420,7 +420,7 @@ class MyShoefitter {
   
       // Set properties on the new button
       mysfButton.id = 'myshoefitter-button'; // Set the button id
-      mysfButton.innerHTML = this.config?.button?.text || `1 Foto - immer die perfekte Größe <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 18px; margin: 0 0 -4px 4px;" />`; // Set the button text
+      mysfButton.innerHTML = this.config?.button?.text || `1 Foto - immer die perfekte Größe <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 17px; margin: 0 4px -4px 4px;" />`; // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
       let styles: Partial<CSSStyleDeclaration> = {
