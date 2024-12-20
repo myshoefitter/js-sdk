@@ -390,6 +390,19 @@ class MyShoefitter {
     return config;
   }
 
+  /**
+   * Determines the button text based on the browser's language.
+   * @returns {string} The button text in the appropriate language.
+   */
+  private getButtonText(): string {
+    const language = navigator.language;
+    if (language.startsWith('de')) {
+      return `1 Foto - immer die perfekte Größe <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 17px; margin: 0 4px -4px 4px;" />`;
+    } else {
+      return `1 Photo - always the perfect fit <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 17px; margin: 0 4px -4px 4px;" />`;
+    }
+  }
+
   private getHostname() {
     try {
       const url = new URL(window.location.href);
@@ -420,7 +433,7 @@ class MyShoefitter {
   
       // Set properties on the new button
       mysfButton.id = 'myshoefitter-button'; // Set the button id
-      mysfButton.innerHTML = this.config?.button?.text || `1 Foto - immer die perfekte Größe <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 17px; margin: 0 4px -4px 4px;" />`; // Set the button text
+      mysfButton.innerHTML = this.config?.button?.text || this.getButtonText(); // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
       let styles: Partial<CSSStyleDeclaration> = {
