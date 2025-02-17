@@ -44,8 +44,15 @@ If you need special customizations, or your shopsystem is not supported yet, ple
       styles: {
         border: '2px solid black',
         boederRadius: '10px'
-      };
-    }
+      },
+      // Set custom attributes for e.g. google analytics tag manager
+      // ⚠️ Important: mySHOEFITTER must be initialized before your tracking code
+      attributes: {
+        'data-gtm-event': 'myshoefitter-button-click',
+        'data-gtm-category': 'engagement',
+        'class': 'custom-shoefitter-class'
+      }
+    };
   });
 </script>
 ```

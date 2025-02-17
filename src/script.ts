@@ -245,7 +245,7 @@ class MyShoefitter {
       return;
     }
 
-    let button = document.getElementById('myshoefitter-button');
+    let button = document.getElementById(this.config?.button?.attributes?.id || 'myshoefitter-button');
 
     const attachTo = this.config?.button?.attachTo;
     const position = this.config?.button?.position || 'after';
@@ -436,6 +436,13 @@ class MyShoefitter {
       mysfButton.innerHTML = this.config?.button?.text || this.getButtonText(); // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
+      // Add custom attributes
+      if (this.config?.button?.attributes) {
+        Object.entries(this.config.button.attributes).forEach(([key, value]) => {
+          mysfButton.setAttribute(key, value);
+        });
+      }
+
       let styles: Partial<CSSStyleDeclaration> = {
         display: 'block',
         width: '100%',
@@ -492,6 +499,7 @@ interface ScriptConfig {
     position?: ButtonPosition;
     text?: string;
     styles?: Partial<CSSStyleDeclaration>;
+    attributes?: Record<string, string>;
   }
 }
 
