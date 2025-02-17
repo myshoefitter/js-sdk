@@ -45,11 +45,8 @@ If you need special customizations, or your shopsystem is not supported yet, ple
         border: '2px solid black',
         boederRadius: '10px'
       },
-      // Set custom attributes for e.g. google analytics tag manager
-      // ⚠️ Important: mySHOEFITTER must be initialized before your tracking code
+      // Set custom attributes
       attributes: {
-        'data-gtm-event': 'myshoefitter-button-click',
-        'data-gtm-category': 'engagement',
         'class': 'custom-shoefitter-class'
       }
     };
@@ -77,6 +74,22 @@ Events are our way of letting you know when something interesting happens in our
     if (event.type === 'RESULT') {
       // Work with the result - e.g. preselect size in shop
       console.log('mySHOEFITTER Shoe Size', event.data.result);
+    }
+
+    if (event.type === 'BUTTON' && event.data && event.data.action === 'click') {
+      // Send click event to google tag manager
+      if (typeof gtag === 'function') {
+        gtag('event', 'click', {
+          event_category: 'mySHOEFITTER', // Group or category for the event
+          event_label: 'mySHOEFITTER Button', // Label to identify the event
+          value: 1 // Optional numeric value associated with the event
+        });
+        console.log('mySHOEFITTER button click event sent to Google Analytics.');
+      } else {
+        console.error('gtag function is not defined.');
+      }
+      // Log the event to the console (for debugging purposes)
+      console.log('Shopify button click event sent to Google Analytics.');
     }
   });
  
