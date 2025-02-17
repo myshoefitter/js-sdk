@@ -264,7 +264,12 @@ class MyShoefitter {
       button.addEventListener('click', (event: Event) => {
         event.preventDefault();
         this.showBanner();
-        this.trackEvent('Banner Open');
+        this.emit({
+          type: EventTypes.Button,
+          data: {
+            action: 'click'
+          }
+        });
         this.initMessageEventListener();
       });
     } else {
@@ -518,7 +523,8 @@ enum EventTypes {
   Init = 'INIT',
   Result = 'RESULT',
   PageView = 'PAGE_VIEW',
-  Banner = 'BANNER'
+  Banner = 'BANNER',
+  Button = 'BUTTON',
 }
 
 // Expose class to parent page
