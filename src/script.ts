@@ -1,4 +1,4 @@
-import { dc, magento, shopify, woocommerce, oxid } from './shop-adapters/index';
+import { dc, magento, shopify, woocommerce, oxid, shopware } from './shop-adapters/index';
 
 /**
  * Represents a service with functionalities related to a product.
@@ -384,6 +384,11 @@ class MyShoefitter {
       case 'woocommerce': {
         config.selector = woocommerce.getCartButtonSelector();
         config.sku = woocommerce.findProductId();
+        break;
+      }
+      case 'shopware': {
+        config.selector = shopware.getCartButtonSelector();
+        config.sku = shopware.findProductId();
         break;
       }
       case 'oxid': {
