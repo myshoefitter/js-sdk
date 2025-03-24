@@ -1,1 +1,1 @@
-export * as fibbl  from './fibbl';
+export { fibbl } from './fibbl';
