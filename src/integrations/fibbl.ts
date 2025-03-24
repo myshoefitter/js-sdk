@@ -5,20 +5,22 @@ export function fibbl() {
   console.log('mySHOEFITTER: Fibbl integration executed!');
 
   // Select all containers that hold the buttons (there may be multiple)
-  const containers = document.querySelectorAll('.fibbl__controls-switch');
+  const containers = document.querySelectorAll('.fibbl__controls-switch') as NodeListOf<HTMLDivElement>;
   if (containers.length === 0) {
     console.error('No button containers found.');
     return;
   }
 
   // Loop through each container
-  containers.forEach((container) => {
+  containers.forEach((container: HTMLDivElement) => {
     // Find the first existing button to clone
     const existingButton = container.querySelector('button.fibbl__controls-switch--option');
     if (!existingButton) {
       console.error('No existing button found to clone in this container.');
       return;
     }
+
+    container.style.setProperty('grid-template-columns', 'repeat(4, auto)');
 
     // Clone the existing button deeply (including its child elements)
     const newButton = existingButton.cloneNode(true) as HTMLButtonElement;
@@ -28,6 +30,8 @@ export function fibbl() {
 
     // Modify the new button's dataset, text, or any other attributes as needed
     newButton.dataset.element = 'find-size';
+
+    newButton.classList.remove('fibbl-active');
 
     // Update the innerHTML with a new SVG icon and text "Find size"
     newButton.innerHTML = `
