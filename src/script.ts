@@ -62,7 +62,7 @@ class MyShoefitter {
           // Use a type assertion to let TypeScript know that the integration object is indexable
           const integrationHandler = (integrationObj as Record<string, any>)[integrationName];
           
-          if (integrationHandler && typeof integrationHandler.init === 'function') {
+          if (integrationHandler) {
             integrationHandler.init(config);
             console.log(`mySHOEFITTER: Initialized integration: ${integrationName}`);
           } else {
