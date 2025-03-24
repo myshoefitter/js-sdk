@@ -1,4 +1,5 @@
 import { dc, magento, shopify, woocommerce, oxid, shopware } from './shop-adapters/index';
+import { fibbl } from './integrations/index';
 
 /**
  * Represents a service with functionalities related to a product.
@@ -14,6 +15,10 @@ class MyShoefitter {
   private bannerOrigin = 'v2.myshoefitter.com'; // Do not include protocol or path!!!
   // Shop systems width available adapters
   private readonly supportedShopSystems = ['woocommerce', 'shopify', 'magento', 'shopware', 'oxid', 'prestashop', 'bigcommerce', 'dc', 'custom'];
+  // Integrations that can be used to extend the script
+  private readonly supportedIntegrations = [{
+    'fibbl': fibbl
+  }];
   // Callback for events
   private callback?: (event: CustomEvent) => void;
 
@@ -46,6 +51,28 @@ class MyShoefitter {
     if (config?.shopSystem && !this.supportedShopSystems.includes(config.shopSystem)) {
       console.error('mySHOEFITTER: Shop System is not supported! productId is required.');
     }
+
+    if (config?.integrations) {
+      // Loop through each integration specified in the configuration
+      config.integrations.forEach((integrationName: string) => {
+        // Find the integration object that has the key matching integrationName
+        const integrationObj = this.supportedIntegrations.find(integration => integration.hasOwnProperty(integrationName));
+        
+        if (integrationObj) {
+          // Use a type assertion to let TypeScript know that the integration object is indexable
+          const integrationHandler = (integrationObj as Record<string, any>)[integrationName];
+          
+          if (integrationHandler && typeof integrationHandler.init === 'function') {
+            integrationHandler.init(config);
+            console.log(`mySHOEFITTER: Initialized integration: ${integrationName}`);
+          } else {
+            console.warn(`mySHOEFITTER: Integration "${integrationName}" does not have an init function.`);
+          }
+        } else {
+          console.warn(`mySHOEFITTER: Integration "${integrationName}" is not supported.`);
+        }
+      });
+    }      
 
     // Check if the Shop System is supported and find the Product ID automatically
     if (config?.shopSystem && this.supportedShopSystems.includes(config.shopSystem)) {
@@ -506,6 +533,7 @@ interface ScriptConfig {
   logsEnabled?: boolean;
   shopSystem?: string;
   bannerOrigin?: boolean; // Override the default banner url
+  integrations?: string[];
   button?: {
     attachTo: string;
     position?: ButtonPosition;
