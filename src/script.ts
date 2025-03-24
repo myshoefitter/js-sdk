@@ -461,6 +461,12 @@ class MyShoefitter {
    * @param position place button before or after the element
    */
   private injectButton(attachTo: string, position: ButtonPosition = 'after') {
+
+    if (!attachTo) {
+      console.error('mySHOEFITTER: Please provide a valid css selector to attach the button to.');
+      return null;
+    }
+
     // Select the existing button
     const addToCartButton: HTMLElement | null = document.querySelector(attachTo);
   
