@@ -1,6 +1,9 @@
 // import { waitForElm } from '../utils/helpers';
 
 export function fibbl() {
+
+  console.log('mySHOEFITTER: Fibbl integration executed!');
+
   // Select all containers that hold the buttons (there may be multiple)
   const containers = document.querySelectorAll('.fibbl__controls-switch');
   if (containers.length === 0) {
