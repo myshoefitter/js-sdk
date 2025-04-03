@@ -9,6 +9,7 @@
     "build": "bun build ./src/script.ts --outdir ./dist/v1 --minify-whitespace --minify-syntax && cp _redirects ./dist",
     "dev": "bun build ./src/script.ts --outdir ./dist/v1 --minify-whitespace --minify-syntax --watch",
     "server": "bun run ./src/server.ts",
+    "dev:server": "concurrently \"bun run dev\" \"bun run server\"",
     "lint": "eslint 'src/**/*.ts'",
     "prettier": "prettier --write 'src/**/*.ts'"
   },
@@ -17,6 +18,7 @@
     "@types/bun": "^1.0.8",
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
+    "concurrently": "^9.1.2",
     "eslint": "^8.48.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
