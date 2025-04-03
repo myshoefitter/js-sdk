@@ -1,5 +1,6 @@
 import { dc, magento, shopify, woocommerce, oxid, shopware } from './shop-adapters/index';
 import { fibbl } from './integrations/index';
+import { BannerParams, ButtonPosition, CustomEvent, EventTypes, myShoeFitter, ScriptConfig, ShopSystemConfig } from './types/types';
 
 /**
  * Represents a service with functionalities related to a product.
@@ -214,6 +215,14 @@ class MyShoefitter {
 
     // Show the dialog
     this.dialog.showModal();
+  }
+
+
+  public getQrCode(): string {
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+      </svg>
+    `;
   }
 
   /**
@@ -531,55 +540,11 @@ class MyShoefitter {
 
 }
 
-interface ScriptConfig {
-  shopId?: string; // @deprecated
-  productId?: string | number; // Override the automatically found product id
-  enabledProductIds?: (string | number)[]; // Product Ids where button should show
-  disabledProductIds?: (string | number)[]; // Product Ids where button should be hidden
-  logsEnabled?: boolean;
-  shopSystem?: string;
-  bannerOrigin?: boolean; // Override the default banner url
-  integrations?: string[];
-  button?: {
-    attachTo: string;
-    position?: ButtonPosition;
-    text?: string;
-    styles?: Partial<CSSStyleDeclaration>;
-    attributes?: Record<string, string>;
-  }
-}
-
-interface BannerParams {
-  shop?: string;
-  product?: string | number;
-  utm_source?: string;
-}
-
-interface CustomEvent {
-  type: EventTypes;
-  data: any;
-}
-
-enum EventTypes {
-  Init = 'INIT',
-  Result = 'RESULT',
-  PageView = 'PAGE_VIEW',
-  Banner = 'BANNER',
-  Button = 'BUTTON',
-}
-
 // Expose class to parent page
 window.myshoefitter = new MyShoefitter();
 
 declare global {
   interface Window {
-    myshoefitter: MyShoefitter;
+    myshoefitter: myShoeFitter;
   }
-}
-
-type ButtonPosition = 'before' | 'after';
-
-interface ShopSystemConfig {
-  sku: string | number | null;
-  selector: string;
 }
