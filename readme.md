@@ -4,8 +4,6 @@
   <img src="https://raw.githubusercontent.com/myshoefitter/js-sdk/main/.github/readme/promotion.jpg" alt="mySHOEFITTER Promotion Banner" />
 </a>
 
-### How to use
-
 ### Simple Integration
 Add the script just before the `</body>` of your website. Make sure you adjust the `shopSystem` property.
 After a successfull implementation, the mySHOEFITTER Button should appear underneath the add to cart button.
@@ -145,11 +143,35 @@ Events are our way of letting you know when something interesting happens in our
  
   // Initiate mySHOEFITTER like usual
   myshoefitter.init({
-    shopId: 'your-shop-id', // <- Replace
     productId: 'your-product-id' // <- Replace
   });
 </script>
 ```
+
+### Integrations
+
+**Fibbl**
+Fibbl is revolutionizing the customer experience with interactive 3D technology tailored for fashion brands on e-commerce platforms. mySHOEFITTER can be integrated in the current Fibbl experience like this:
+
+```js
+myshoefitter.init({
+  shopSystem: 'shopify',
+  integrations: [
+    {
+      fibbl: {
+        active: true
+      }
+    }
+  ]
+});
+```
+
+### Plugins
+
+For the easiest integration experience, we offer official plugins for major e-commerce platforms including:
+- [WooCommerce](https://github.com/myshoefitter/wordpress-plugin)
+- [Shopware 6](https://github.com/myshoefitter/shopware-plugin/tree/main/MyShoeFitter)
+- [Shopware 5](https://github.com/myshoefitter/shopware-plugin/tree/main/MyShoeFitter_SW5)
 
 **🚀 Get your Shop ID at [https://en.myshoefitter.com/kontakt](https://en.myshoefitter.com/kontakt)**  
 **📖 Read the Documentation at [https://docs.myshoefitter.com](https://docs.myshoefitter.com)**
