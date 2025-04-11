@@ -65,9 +65,9 @@ The MyShoefitter script provides flexible filtering capabilities that allow you 
 These filtering options give you precise control over where the size recommendation feature appears in your store, ensuring it's only shown on relevant products such as footwear while being hidden on inappropriate items like accessories or clothing.
 The script supports four filtering parameters that can be used independently or in combination:
 
-`enabledProductIds`: Show the button ONLY on specific product IDs
-`disabledProductIds`: Hide the button on specific product IDs
-`enabledProductNames`: Show the button ONLY on products with specific names/titles
+`enabledProductIds`: Show the button ONLY on specific product IDs  
+`disabledProductIds`: Hide the button on specific product IDs  
+`enabledProductNames`: Show the button ONLY on products with specific names/titles  
 `disabledProductNames`: Hide the button on products with specific names/titles
 
 When multiple filters are used together, a product must pass ALL active filter conditions for the button to be displayed.
@@ -81,7 +81,7 @@ myshoefitter.init({
   enabledProductNames: ['Running Shoes']
 });
 
-// Hide button on products containing "Sandals" or "Flip Flops" in the title
+// Or hide button on products containing "Sandals" or "Flip Flops" in the title
 myshoefitter.init({
   shopSystem: 'woocommerce',
   disabledProductNames: ['Sandals', 'Flip Flops']
@@ -91,6 +91,20 @@ myshoefitter.init({
 myshoefitter.init({
   shopSystem: 'magento',
   disabledProductNames: ['/Kids\s+Shoes/i', '/Size\s+\d+/']
+});
+
+// If you want to enable mySHOEFITTER only on specific products
+// On all other products mySHOEFITTER will bee disabled
+myshoefitter.init({
+  shopSystem: 'magento',
+  enabledProductIds: ['abc123', 'def456']
+});
+
+// If you want to disable mySHOEFITTER only on specific products
+// On all other products mySHOEFITTER will bee enabled
+myshoefitter.init({
+  shopSystem: 'magento',
+  disabledProductIds: ['abc123', 'def456']
 });
 ```
 
