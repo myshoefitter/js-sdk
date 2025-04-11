@@ -151,6 +151,7 @@ Events are our way of letting you know when something interesting happens in our
 ### Integrations
 
 **Fibbl**
+
 Fibbl is revolutionizing the customer experience with interactive 3D technology tailored for fashion brands on e-commerce platforms. mySHOEFITTER can be integrated in the current Fibbl experience like this:
 
 ```js
