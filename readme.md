@@ -6,7 +6,7 @@
 
 ### How to use
 
-#### Simple Integration
+### Simple Integration
 Add the script just before the `</body>` of your website. Make sure you adjust the `shopSystem` property.
 After a successfull implementation, the mySHOEFITTER Button should appear underneath the add to cart button.
 ```html
@@ -26,7 +26,7 @@ After a successfull implementation, the mySHOEFITTER Button should appear undern
 </script>
 ```
 
-#### Extended Integration
+### Extended Integration
 If you need special customizations, or your shopsystem is not supported yet, please use the following implementation:
 ```html
 <!-- Load the Script -->
@@ -59,7 +59,7 @@ Add the button to open mySHOEFITTER where it fits your website the best:
 <button id="myshoefitter-button">Find the right size</button>
 ```
 
-#### Filters
+### Filters
 
 The MyShoefitter script provides flexible filtering capabilities that allow you to control exactly which products display the size recommendation button. You can filter products by their ID, their name, or a combination of both methods.
 These filtering options give you precise control over where the size recommendation feature appears in your store, ensuring it's only shown on relevant products such as footwear while being hidden on inappropriate items like accessories or clothing.
@@ -94,7 +94,7 @@ myshoefitter.init({
 });
 ```
 
-#### Events
+### Events
 
 Events are our way of letting you know when something interesting happens in our web app. When an interesting event occurs, we create a new event object. For example, when a user clicks through the web app or a shoe size was determined.
 
