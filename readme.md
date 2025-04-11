@@ -58,6 +58,42 @@ Add the button to open mySHOEFITTER where it fits your website the best:
 ```html
 <button id="myshoefitter-button">Find the right size</button>
 ```
+
+#### Filters
+
+The MyShoefitter script provides flexible filtering capabilities that allow you to control exactly which products display the size recommendation button. You can filter products by their ID, their name, or a combination of both methods.
+These filtering options give you precise control over where the size recommendation feature appears in your store, ensuring it's only shown on relevant products such as footwear while being hidden on inappropriate items like accessories or clothing.
+The script supports four filtering parameters that can be used independently or in combination:
+
+`enabledProductIds`: Show the button ONLY on specific product IDs
+`disabledProductIds`: Hide the button on specific product IDs
+`enabledProductNames`: Show the button ONLY on products with specific names/titles
+`disabledProductNames`: Hide the button on products with specific names/titles
+
+When multiple filters are used together, a product must pass ALL active filter conditions for the button to be displayed.
+
+**Examples**
+
+```js
+// Only show button on products with "Running Shoes" in the title
+myshoefitter.init({
+  shopSystem: 'shopify',
+  enabledProductNames: ['Running Shoes']
+});
+
+// Hide button on products containing "Sandals" or "Flip Flops" in the title
+myshoefitter.init({
+  shopSystem: 'woocommerce',
+  disabledProductNames: ['Sandals', 'Flip Flops']
+});
+
+// Use regex pattern to match specific formats
+myshoefitter.init({
+  shopSystem: 'magento',
+  disabledProductNames: ['/Kids\s+Shoes/i', '/Size\s+\d+/']
+});
+```
+
 #### Events
 
 Events are our way of letting you know when something interesting happens in our web app. When an interesting event occurs, we create a new event object. For example, when a user clicks through the web app or a shoe size was determined.

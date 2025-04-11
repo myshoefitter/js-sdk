@@ -231,17 +231,98 @@ class MyShoefitter {
   }
 
   /**
+   * Extracts the product name from the page title
+   * @returns The product name from the page title
+   */
+  private getProductNameFromTitle(): string {
+    return document.title || '';
+  }
+
+  /**
+   * Checks if the product name matches the pattern
+   * @param productName The product name to check
+   * @param pattern The pattern to match against (string or regex pattern)
+   * @returns True if the product name matches the pattern
+   */
+  private matchProductName(productName: string, pattern: string): boolean {
+    if (pattern.startsWith('/') && pattern.length > 2) {
+      // Handle regex pattern (e.g., "/Nike Air/i")
+      try {
+        const lastSlashIndex = pattern.lastIndexOf('/');
+        const regexPattern = pattern.substring(1, lastSlashIndex);
+        const flags = pattern.substring(lastSlashIndex + 1) || '';
+        return new RegExp(regexPattern, flags).test(productName);
+      } catch (e) {
+        console.error('mySHOEFITTER: Invalid regex pattern:', pattern, e);
+        return false;
+      }
+    } else {
+      // Simple string matching (case-insensitive)
+      return productName.toLowerCase().includes(pattern.toLowerCase());
+    }
+  }
+
+  /**
+   * Checks if product should be enabled based on its name in the page title
+   * @returns True if the product should be enabled based on name matching
+   */
+  private isProductEnabledByName(): boolean {
+    const productName = this.getProductNameFromTitle();
+    
+    // If no product name is found, don't filter by name
+    if (!productName) {
+      return true;
+    }
+
+    // Check enabledProductNames - if specified, show ONLY if name matches one of the patterns
+    if (this.config?.enabledProductNames?.length) {
+      const isEnabled = this.config.enabledProductNames.some(pattern => 
+        this.matchProductName(productName, pattern)
+      );
+      
+      if (!isEnabled) {
+        console.log(`mySHOEFITTER: Button hidden - product name "${productName}" not in enabledProductNames`);
+        return false;
+      }
+    }
+    
+    // Check disabledProductNames - if specified, hide if name matches any pattern
+    if (this.config?.disabledProductNames?.length) {
+      const isDisabled = this.config.disabledProductNames.some(pattern => 
+        this.matchProductName(productName, pattern)
+      );
+      
+      if (isDisabled) {
+        console.log(`mySHOEFITTER: Button hidden - product name "${productName}" found in disabledProductNames`);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  /**
    * Find the button in html and add click listener
    */
   private addButton(): void {
-
     if (!this.config?.productId) {
       return;
     }
 
-    // Only show button on enabled products
+    // Only show button on enabled products by ID
     if (this.config?.enabledProductIds?.length && !this.config?.enabledProductIds?.includes(String(this.config.productId))) {
-      console.log('mySHOEFITTER: Button hidden on Product', this.config?.productId);
+      console.log('mySHOEFITTER: Button hidden on Product ID', this.config?.productId);
+      return;
+    }
+    
+    // Hide button on disabled products by ID
+    if (this.config?.disabledProductIds?.length && this.config?.disabledProductIds?.includes(String(this.config.productId))) {
+      console.log('mySHOEFITTER: Button hidden on Product ID', this.config?.productId);
+      return;
+    }
+    
+    // Check if product should be enabled/disabled based on its name in the page title
+    if (!this.isProductEnabledByName()) {
       return;
     }
 
@@ -503,6 +584,8 @@ interface ScriptConfig {
   productId?: string | number; // Override the automatically found product id
   enabledProductIds?: (string | number)[]; // Product Ids where button should show
   disabledProductIds?: (string | number)[]; // Product Ids where button should be hidden
+  enabledProductNames?: string[]; // Product names (from page title) where button should show
+  disabledProductNames?: string[]; // Product names (from page title) where button should be hidden
   logsEnabled?: boolean;
   shopSystem?: string;
   bannerOrigin?: boolean; // Override the default banner url
