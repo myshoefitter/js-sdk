@@ -148,9 +148,15 @@ export function fibbl() {
           // Store original children for later restoration
           originalModelChildren = Array.from(mainContent.children).map(child => child.cloneNode(true) as Element);
 
-          // Remove all children
-          while (mainContent.firstChild) {
-            mainContent.removeChild(mainContent.firstChild);
+          // Find and store the controls div
+          const controlsDiv = document.querySelector('div.fibbl__controls');
+
+          // Remove all children from mainContent
+          mainContent.innerHTML = '';
+
+          // If we found the controls div, reattach it
+          if (controlsDiv) {
+            mainContent.appendChild(controlsDiv);
           }
 
           // Create and append our size guide
@@ -168,6 +174,14 @@ export function fibbl() {
       const otherButtons = container.querySelectorAll('button.fibbl__controls-switch--option:not([data-element="find-size"])');
       otherButtons.forEach(button => {
         button.addEventListener('click', () => {
+          // Remove active class from all buttons
+          container.querySelectorAll('button.fibbl__controls-switch--option').forEach(btn => {
+            btn.classList.remove('fibbl-active');
+          });
+
+          // Add active class to the clicked button
+          button.classList.add('fibbl-active');
+
           // Find the main content element and our size guide
           const mainContent = document.querySelector('main#content');
           const sizeGuide = document.querySelector('.myshoefitter-container');
@@ -178,6 +192,8 @@ export function fibbl() {
 
             // Restore original children
             mainContent.innerHTML = ''; // Clear first
+            
+            // Then append all other original children
             originalModelChildren.forEach(child => {
               mainContent.appendChild(child);
             });
