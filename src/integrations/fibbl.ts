@@ -21,9 +21,14 @@ export function fibbl() {
       width: 100%;
       height: 100%;
       background: linear-gradient(31.48deg, #cfcbc8 19.62%, #dfe0e4 100%);
+      z-index: 100;
     `;
 
-    const mysfAppUrl = 'https://v2.myshoefitter.com/?utm_source=fibbl&utm_medium=web&utm_campaign=qr_code';
+    const mysfAppUrl = window.myshoefitter.getCameraLink();
+    const encodedUrl = encodeURIComponent(mysfAppUrl);
+
+    console.log('MYSF APP URL', mysfAppUrl)
+
     element.innerHTML = `
     <div id="overlay" style="
       display: flex; 
@@ -47,7 +52,7 @@ export function fibbl() {
     <h3 style="color: #ffffff; font-weight: 600; font-size: 1.9em; margin-bottom: clamp(10px, calc(725px / 40), 20px);">Scan the QR Code</h3>
     <div style="color: #ffffff; font-size: 1.4em; text-align: center; margin-bottom: clamp(10px, calc(725px / 40), 20px); max-width: 25em;">Point your mobile device camera at the QR code below to try it on</div>
     <div style="width: 300px; height: 300px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); ">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${mysfAppUrl}" alt="QR Code" width="100%" height="100%" style="padding: 10px;" />
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}" alt="QR Code" width="100%" height="100%" style="padding: 10px;" />
     </div>
     </div>
 
@@ -64,7 +69,23 @@ export function fibbl() {
       }
     });
 
+    element.addEventListener('touchstart', () => {
+      const overlay = element.querySelector('#overlay') as HTMLElement;
+      if (overlay) {
+        overlay.style.opacity = '1';
+        overlay.style.visibility = 'visible';
+      }
+    });
+
     element.addEventListener('mouseleave', () => {
+      const overlay = element.querySelector('#overlay') as HTMLElement;
+      if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden';
+      }
+    });
+
+    element.addEventListener('touchend', () => {
       const overlay = element.querySelector('#overlay') as HTMLElement;
       if (overlay) {
         overlay.style.opacity = '0';
@@ -119,22 +140,22 @@ export function fibbl() {
           layerContent.remove();
         }
 
-        // Find #fibbl-model
-        const fibblModel = document.querySelector('#fibbl-model');
-        console.log('Fibbl model:', fibblModel);
+        // Find the main content element
+        const mainContent = document.querySelector('main#content');
+        console.log('Main content:', mainContent);
 
-        if (fibblModel) {
+        if (mainContent) {
           // Store original children for later restoration
-          originalModelChildren = Array.from(fibblModel.children).map(child => child.cloneNode(true) as Element);
+          originalModelChildren = Array.from(mainContent.children).map(child => child.cloneNode(true) as Element);
 
           // Remove all children
-          while (fibblModel.firstChild) {
-            fibblModel.removeChild(fibblModel.firstChild);
+          while (mainContent.firstChild) {
+            mainContent.removeChild(mainContent.firstChild);
           }
 
           // Create and append our size guide
           const sizeGuide = createSizeGuideElement();
-          fibblModel.appendChild(sizeGuide);
+          mainContent.appendChild(sizeGuide);
         }
 
         toggleElements(false);
@@ -147,21 +168,21 @@ export function fibbl() {
       const otherButtons = container.querySelectorAll('button.fibbl__controls-switch--option:not([data-element="find-size"])');
       otherButtons.forEach(button => {
         button.addEventListener('click', () => {
-          // Find #fibbl-model and our size guide
-          const fibblModel = document.querySelector('#fibbl-model');
+          // Find the main content element and our size guide
+          const mainContent = document.querySelector('main#content');
           const sizeGuide = document.querySelector('.myshoefitter-container');
 
-          if (fibblModel && sizeGuide) {
+          if (mainContent && sizeGuide) {
             // Remove our size guide
             sizeGuide.remove();
 
             // Restore original children
-            fibblModel.innerHTML = ''; // Clear first
+            mainContent.innerHTML = ''; // Clear first
             originalModelChildren.forEach(child => {
-              fibblModel.appendChild(child);
+              mainContent.appendChild(child);
             });
 
-            console.log('Restored original fibbl-model children');
+            console.log('Restored original main content children');
           }
 
           toggleElements(true);

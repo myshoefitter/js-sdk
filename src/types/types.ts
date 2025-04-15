@@ -1,6 +1,6 @@
-
 export interface myShoeFitter {
   getQrCode(): string; // Returns SVG string
+  getCameraLink(): string; // Returns the camera link URL
   init(config: ScriptConfig): void;
 }
 
