@@ -1,3 +1,13 @@
+declare global {
+  interface Window {
+    myshoefitter: {
+      getCameraLink: () => string;
+    };
+  }
+}
+
+export type FibblElement = Element & { cloneNode(deep?: boolean): FibblElement };
+
 export interface myShoeFitter {
   getQrCode(): string; // Returns SVG string
   getCameraLink(): string; // Returns the camera link URL
