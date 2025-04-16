@@ -11,6 +11,16 @@ export function fibbl() {
     return;
   }
 
+  // Add event listeners for hover effects
+  // Helper function to toggle overlay visibility
+  const toggleOverlay = (element: HTMLElement, visible: boolean) => {
+    const overlay = element.querySelector('#overlay') as HTMLElement;
+    if (overlay) {
+      overlay.style.opacity = visible ? '1' : '0';
+      overlay.style.visibility = visible ? 'visible' : 'hidden';
+    }
+  };
+
   // Create our size guide content element that will be injected
   const createSizeGuideElement = () => {
     const element = document.createElement('div');
@@ -47,6 +57,7 @@ export function fibbl() {
       position: absolute;
       top: 0;
       left: 0;
+      z-index: 1;
     ">
     <h3 style="color: #ffffff; font-weight: 600; font-size: 1.9em; margin-bottom: clamp(10px, calc(725px / 40), 20px);">Scan the QR Code</h3>
     <div style="color: #ffffff; font-size: 1.4em; text-align: center; margin-bottom: clamp(10px, calc(725px / 40), 20px); max-width: 25em;">Point your mobile device camera at the QR code below to try it on</div>
@@ -59,38 +70,14 @@ export function fibbl() {
 
     `;
 
-    // Add event listeners for hover effects
-    element.addEventListener('mouseenter', () => {
-      const overlay = element.querySelector('#overlay') as HTMLElement;
-      if (overlay) {
-        overlay.style.opacity = '1';
-        overlay.style.visibility = 'visible';
-      }
-    });
+    // Add event listeners with the helper function
+    ['mouseenter', 'touchstart'].forEach(event => 
+      element.addEventListener(event, () => toggleOverlay(element, true))
+    );
 
-    element.addEventListener('touchstart', () => {
-      const overlay = element.querySelector('#overlay') as HTMLElement;
-      if (overlay) {
-        overlay.style.opacity = '1';
-        overlay.style.visibility = 'visible';
-      }
-    });
-
-    element.addEventListener('mouseleave', () => {
-      const overlay = element.querySelector('#overlay') as HTMLElement;
-      if (overlay) {
-        overlay.style.opacity = '0';
-        overlay.style.visibility = 'hidden';
-      }
-    });
-
-    element.addEventListener('touchend', () => {
-      const overlay = element.querySelector('#overlay') as HTMLElement;
-      if (overlay) {
-        overlay.style.opacity = '0';
-        overlay.style.visibility = 'hidden';
-      }
-    });
+    ['mouseleave', 'touchend'].forEach(event => 
+      element.addEventListener(event, () => toggleOverlay(element, false))
+    );
 
     return element;
   };
