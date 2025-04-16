@@ -21,7 +21,7 @@ export function fibbl() {
       width: 100%;
       height: 100%;
       background: linear-gradient(31.48deg, #cfcbc8 19.62%, #dfe0e4 100%);
-      z-index: 100;
+      z-index: 1;
     `;
 
     const mysfAppUrl = window.myshoefitter.getCameraLink();
@@ -47,7 +47,6 @@ export function fibbl() {
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 1;
     ">
     <h3 style="color: #ffffff; font-weight: 600; font-size: 1.9em; margin-bottom: clamp(10px, calc(725px / 40), 20px);">Scan the QR Code</h3>
     <div style="color: #ffffff; font-size: 1.4em; text-align: center; margin-bottom: clamp(10px, calc(725px / 40), 20px); max-width: 25em;">Point your mobile device camera at the QR code below to try it on</div>
@@ -140,28 +139,22 @@ export function fibbl() {
           layerContent.remove();
         }
 
-        // Find the main content element
-        const mainContent = document.querySelector('main#content');
-        console.log('Main content:', mainContent);
+        // Find #fibbl-model
+        const fibblModel = document.querySelector('#fibbl-model');
+        console.log('Fibbl model:', fibblModel);
 
-        if (mainContent) {
+        if (fibblModel) {
           // Store original children for later restoration
-          originalModelChildren = Array.from(mainContent.children).map(child => child.cloneNode(true) as Element);
+          originalModelChildren = Array.from(fibblModel.children).map(child => child.cloneNode(true) as Element);
 
-          // Find and store the controls div
-          const controlsDiv = document.querySelector('div.fibbl__controls');
-
-          // Remove all children from mainContent
-          mainContent.innerHTML = '';
-
-          // If we found the controls div, reattach it
-          if (controlsDiv) {
-            mainContent.appendChild(controlsDiv);
+          // Remove all children
+          while (fibblModel.firstChild) {
+            fibblModel.removeChild(fibblModel.firstChild);
           }
 
           // Create and append our size guide
           const sizeGuide = createSizeGuideElement();
-          mainContent.appendChild(sizeGuide);
+          fibblModel.appendChild(sizeGuide);
         }
 
         toggleElements(false);
@@ -174,31 +167,21 @@ export function fibbl() {
       const otherButtons = container.querySelectorAll('button.fibbl__controls-switch--option:not([data-element="find-size"])');
       otherButtons.forEach(button => {
         button.addEventListener('click', () => {
-          // Remove active class from all buttons
-          container.querySelectorAll('button.fibbl__controls-switch--option').forEach(btn => {
-            btn.classList.remove('fibbl-active');
-          });
-
-          // Add active class to the clicked button
-          button.classList.add('fibbl-active');
-
-          // Find the main content element and our size guide
-          const mainContent = document.querySelector('main#content');
+          // Find #fibbl-model and our size guide
+          const fibblModel = document.querySelector('#fibbl-model');
           const sizeGuide = document.querySelector('.myshoefitter-container');
 
-          if (mainContent && sizeGuide) {
+          if (fibblModel && sizeGuide) {
             // Remove our size guide
             sizeGuide.remove();
 
             // Restore original children
-            mainContent.innerHTML = ''; // Clear first
-            
-            // Then append all other original children
+            fibblModel.innerHTML = ''; // Clear first
             originalModelChildren.forEach(child => {
-              mainContent.appendChild(child);
+              fibblModel.appendChild(child);
             });
 
-            console.log('Restored original main content children');
+            console.log('Restored original fibbl-model children');
           }
 
           toggleElements(true);
