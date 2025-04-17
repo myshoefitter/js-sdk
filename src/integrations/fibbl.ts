@@ -12,7 +12,7 @@ export function fibbl() {
   }
 
   // Create our size guide content element that will be injected
-  const createSizeGuideElement = () => {
+  const createSizeGuideElement = (isMobile: boolean) => {
     const element = document.createElement('div');
     element.className = 'myshoefitter-container';
     element.setAttribute('slot', Date.now().toString()); // Unique slot ID
@@ -21,6 +21,7 @@ export function fibbl() {
       width: 100%;
       height: 100%;
       background: linear-gradient(31.48deg, #cfcbc8 19.62%, #dfe0e4 100%);
+      ${isMobile ? 'z-index: 2;' : 'z-index: 1;'}
     `;
 
     const mysfAppUrl = 'https://v2.myshoefitter.com/?utm_source=fibbl&utm_medium=web&utm_campaign=qr_code';
@@ -121,6 +122,10 @@ export function fibbl() {
 
         // Find #fibbl-model
         const fibblModel = document.querySelector('#fibbl-model');
+        const fibblMobileContainer = document.querySelector('#fibbl-container-mobile');
+
+        console.log('Fibbl mobile container:', fibblMobileContainer);
+
         console.log('Fibbl model:', fibblModel);
 
         if (fibblModel) {
@@ -133,8 +138,26 @@ export function fibbl() {
           }
 
           // Create and append our size guide
-          const sizeGuide = createSizeGuideElement();
+          const sizeGuide = createSizeGuideElement(false);
           fibblModel.appendChild(sizeGuide);
+        }
+
+        if(fibblMobileContainer) {
+          const firstChild = fibblMobileContainer.firstElementChild;
+          if (firstChild) {
+            originalModelChildren = Array.from(firstChild.children).map(child => child.cloneNode(true) as Element);
+
+            // remove x-fibbl-layer-content
+            const layerContent = firstChild.querySelector('x-fibbl-layer-content');
+            if (layerContent) {
+              layerContent.remove();
+            }
+            
+            // Create and append our size guide
+            const sizeGuide = createSizeGuideElement(true);
+
+            firstChild.insertBefore(sizeGuide, firstChild.firstChild);
+          }
         }
 
         toggleElements(false);
