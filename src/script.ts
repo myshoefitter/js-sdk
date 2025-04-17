@@ -238,6 +238,39 @@ class MyShoefitter {
   }
 
   /**
+   * Generates the direct link to the camera page
+   * @returns string The direct link to the camera page
+   */
+  public getCameraLink(): string {
+    if (!this.config?.productId) {
+      console.warn('mySHOEFITTER: No productId found!')
+      return '';
+    }
+
+    const protocol = this.bannerOrigin.includes('localhost') ? 'http' : 'https';
+    const bannerHost = protocol + '://' + this.bannerOrigin + '/camera';
+    
+    const params = {
+      shop: this.config?.shopId || this.getHostname(),
+      product: this.config?.productId,
+      utm_source: window?.location?.hostname
+    };
+
+    
+    // Filter out undefined values
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined)
+    );
+
+    console.log('PARAMS', params)
+    console.log('FILTERED PARAMS', filteredParams)
+
+    console.log(bannerHost + '?' + new URLSearchParams(filteredParams as Record<string, string>).toString())
+
+    return bannerHost + '?' + new URLSearchParams(filteredParams as Record<string, string>).toString();
+  }
+
+  /**
    * Generates the link incl. all params that opens in the iframe
    * @returns https://dialog.myshoefitter.com/?....
    */

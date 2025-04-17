@@ -24,7 +24,10 @@ export function fibbl() {
       ${isMobile ? 'z-index: 2;' : 'z-index: 1;'}
     `;
 
-    const mysfAppUrl = 'https://v2.myshoefitter.com/?utm_source=fibbl&utm_medium=web&utm_campaign=qr_code';
+    const mysfAppUrl = window.myshoefitter.getCameraLink();
+    const encodedUrl = encodeURIComponent(mysfAppUrl);
+
+
     element.innerHTML = `
     <div id="overlay" style="
       display: flex; 
@@ -48,7 +51,7 @@ export function fibbl() {
     <h3 style="color: #ffffff; font-weight: 600; font-size: 1.9em; margin-bottom: clamp(10px, calc(725px / 40), 20px);">Scan the QR Code</h3>
     <div style="color: #ffffff; font-size: 1.4em; text-align: center; margin-bottom: clamp(10px, calc(725px / 40), 20px); max-width: 25em;">Point your mobile device camera at the QR code below to try it on</div>
     <div style="width: 300px; height: 300px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); ">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${mysfAppUrl}" alt="QR Code" width="100%" height="100%" style="padding: 10px;" />
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}" alt="QR Code" width="100%" height="100%" style="padding: 10px;" />
     </div>
     </div>
 
