@@ -1,19 +1,19 @@
 import { dc, magento, shopify, woocommerce, oxid, shopware } from './shop-adapters/index';
 import { fibbl } from './integrations/index';
-import { BannerParams, ButtonPosition, CustomEvent, EventTypes, myShoeFitter, ScriptConfig, ShopSystemConfig } from './types/types';
+import { BannerParams, ButtonPosition, CustomEvent, EventTypes, LinkOptions, myShoeFitter, ScriptConfig, ShopSystemConfig } from './types/types';
+import { detectClient, generateAppLink, getHostname } from './utils/helpers';
+import { getConfig, updateConfig, getBannerParams } from './utils/config';
 
 /**
  * Represents a service with functionalities related to a product.
  */
 class MyShoefitter {
-  // The config to initialize the script
-  private config: ScriptConfig | undefined;
   // The dialog window
   private dialog: HTMLDialogElement | undefined;
   // The params for the banner
   private params: BannerParams | undefined;
-  // Banner Origin
-  private bannerOrigin = 'v2.myshoefitter.com'; // Do not include protocol or path!!!
+  // Banner Origin - will be read from config
+  private bannerOrigin: string;
   // Shop systems width available adapters
   private readonly supportedShopSystems = ['woocommerce', 'shopify', 'magento', 'shopware', 'oxid', 'prestashop', 'bigcommerce', 'dc', 'custom'];
   // Integrations that can be used to extend the script
@@ -23,46 +23,73 @@ class MyShoefitter {
   // Callback for events
   private callback?: (event: CustomEvent) => void;
 
+  constructor() {
+    // Initialize bannerOrigin from config
+    this.bannerOrigin = getConfig<string>('config.bannerOrigin');
+  }
+
   /**
    * Initialize the Script
    * @param config ScriptConfig
    */
   public init(config: ScriptConfig): void {
-    this.config = config;
+    // Get the current bannerOrigin
+    const currentBannerOrigin = getConfig<string>('config.bannerOrigin');
 
-    // Override the default banner url
-    if (typeof config?.bannerOrigin === 'string') {
-      this.bannerOrigin = config.bannerOrigin;
-    }
+    // Update the central config store
+    updateConfig({
+      config: {
+        ...config,
+        bannerOrigin: (config.bannerOrigin || currentBannerOrigin) as string
+      },
+      initialized: true
+    });
+
+    // Update bannerOrigin from config
+    this.bannerOrigin = getConfig<string>('config.bannerOrigin');
 
     // On PWA V2, the hostname will be used to identify the shop
-    config.shopId = this.getHostname();
+    const shopId = getHostname();
+    updateConfig({
+      config: {
+        shopId,
+        bannerOrigin: getConfig<string>('config.bannerOrigin')
+      }
+    });
 
     // Overwrite settings for groundies
-    if (config.shopId?.includes('groundies.com')) {
-      config.shopSystem = 'oxid';
-      config.productId = undefined;
-    }    
+    if (shopId?.includes('groundies.com')) {
+      updateConfig({
+        config: {
+          shopSystem: 'oxid',
+          productId: undefined,
+          bannerOrigin: getConfig<string>('config.bannerOrigin')
+        }
+      });
+    }
+
+    const currentConfig = getConfig().config;
 
     // Show error if productId and shopSystem are missing - pwa will not work without these parameters
-    if (!config?.productId && !config?.shopSystem) {
+    if (!currentConfig.productId && !currentConfig.shopSystem) {
       console.error('mySHOEFITTER: Please provide either productId or shopSystem!');
     }
 
-    if (config?.shopSystem && !this.supportedShopSystems.includes(config.shopSystem)) {
+    if (currentConfig.shopSystem && !this.supportedShopSystems.includes(currentConfig.shopSystem)) {
       console.error('mySHOEFITTER: Shop System is not supported! productId is required.');
     }
 
-    if (config?.integrations) {
+    // Handle integrations
+    if (currentConfig?.integrations?.length) {
       // Loop through each integration specified in the configuration
-      config.integrations.forEach((integrationName: string) => {
+      currentConfig.integrations.forEach((integrationName: string) => {
         // Find the integration object that has the key matching integrationName
         const integrationObj = this.supportedIntegrations.find(integration => integration.hasOwnProperty(integrationName));
-        
+
         if (integrationObj) {
           // Use a type assertion to let TypeScript know that the integration object is indexable
           const integrationHandler = (integrationObj as Record<string, any>)[integrationName];
-          
+
           if (typeof integrationHandler === 'function') {
             integrationHandler();
             console.log(`mySHOEFITTER: Initialized integration: ${integrationName}`);
@@ -73,35 +100,39 @@ class MyShoefitter {
           console.warn(`mySHOEFITTER: Integration "${integrationName}" is not supported.`);
         }
       });
-    }      
+    }
 
     // Check if the Shop System is supported and find the Product ID automatically
-    if (config?.shopSystem && this.supportedShopSystems.includes(config.shopSystem)) {
-      const { sku } = this.getShopSystemConfig(config.shopSystem);
+    if (currentConfig.shopSystem && this.supportedShopSystems.includes(currentConfig.shopSystem)) {
+      const { sku } = this.getShopSystemConfig(currentConfig.shopSystem);
 
-      if (!config?.productId && sku) {
-        config.productId = String(sku);
-        console.log(`mySHOEFITTER: Product ID found: ${config.productId}`);
+      if (!currentConfig.productId && sku) {
+        updateConfig({
+          config: {
+            productId: String(sku),
+            bannerOrigin: getConfig<string>('config.bannerOrigin')
+          }
+        });
+        console.log(`mySHOEFITTER: Product ID found: ${sku}`);
       } else {
         console.error('mySHOEFITTER: Product ID could not be found! Please set it manually using productId parameter.');
       }
     }
 
-    this.params = {
-      shop: config?.shopId,
-      product: config?.productId,
-      utm_source: window?.location?.hostname // Don't remove or encrypt! Needed for Analytics!
-    };
+    // Get banner params from config utility
+    this.params = getBannerParams() as BannerParams;
 
     this.addButton();
     // this.trackEvent('Button Load');
 
     this.emit({
       type: EventTypes.Init,
-      data: config
+      data: currentConfig
     });
 
-    console.log('mySHOEFITTER Config:', config);
+    if (currentConfig.logsEnabled) {
+      console.log('mySHOEFITTER Config:', currentConfig);
+    }
   }
 
   /**
@@ -110,21 +141,6 @@ class MyShoefitter {
    */
   public events(callback: (event: CustomEvent) => void) {
     this.callback = callback;
-  }
-
-  /**
-   * Detects client type
-   */
-  private detectClient(): string {
-    const userAgent = window.parent.navigator.userAgent;
-    const isMobile = /Mobi/i.test(userAgent) && !/Tablet|iPad/i.test(userAgent);
-    const isTablet = /Tablet|iPad/i.test(userAgent) || (window.innerWidth <= 1024 && /Mobi/i.test(userAgent));
-    const isDesktop = !isMobile && !isTablet;
-
-    if (isMobile) return 'mobile';
-    else if (isTablet) return 'tablet';
-    else if (isDesktop) return 'desktop';
-    else return 'desktop'
   }
 
   /**
@@ -141,17 +157,16 @@ class MyShoefitter {
    * Creates a new HTMLDialogElement and opens the Banner as an iFrame
    */
   public showBanner(): void {
-
-    const isDesktop = this.detectClient() === 'desktop';
-    if(!isDesktop) {
-      const link = this.generateBannerLink();
+    const isDesktop = detectClient() === 'desktop';
+    if (!isDesktop) {
+      const link = generateAppLink();
       window.open(link);
       return;
     }
 
     // Create the dialog element
     if (!this.dialog) {
-      const isDesktop = this.detectClient() === 'desktop';
+      const isDesktop = detectClient() === 'desktop';
       this.dialog = document.createElement('dialog');
       this.dialog.id = 'myshoefitter-dialog';
       this.dialog.style.margin = '0';
@@ -178,7 +193,7 @@ class MyShoefitter {
       // Create the iframe element
       const iframe = document.createElement('iframe');
       iframe.allow = 'camera; microphone; autoplay';
-      iframe.src = this.generateBannerLink();
+      iframe.src = generateAppLink();
       iframe.scrolling = 'no';
       iframe.style.width = '100%';
       iframe.style.height = '100%';
@@ -217,52 +232,20 @@ class MyShoefitter {
     this.dialog.showModal();
   }
 
-
-  public getQrCode(): string {
-    return `
-      <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
-      </svg>
-    `;
-  }
-
   /**
-   * Generates the direct link to the camera page
-   * @returns string The direct link to the camera page
+   * Exposes generateAppLink to be used by shop developers
+   * Example: myshoefitter.getLink()
+   * @returns string
    */
-  public getCameraLink(): string {
-    if (!this.config?.productId) {
-      console.warn('mySHOEFITTER: No productId found!')
-      return '';
-    }
-
-    const protocol = this.bannerOrigin.includes('localhost') ? 'http' : 'https';
-    const bannerHost = protocol + '://' + this.bannerOrigin + '/camera';
-    
-    const params = {
-      shop: this.config?.shopId || this.getHostname(),
-      product: this.config?.productId,
-      utm_source: window?.location?.hostname
-    };
-
-    
-    // Filter out undefined values
-    const filteredParams = Object.fromEntries(
-      Object.entries(params).filter(([, value]) => value !== undefined)
-    );
-
-    console.log('PARAMS', params)
-    console.log('FILTERED PARAMS', filteredParams)
-
-    console.log(bannerHost + '?' + new URLSearchParams(filteredParams as Record<string, string>).toString())
-
-    return bannerHost + '?' + new URLSearchParams(filteredParams as Record<string, string>).toString();
+  public getLink(options?: LinkOptions): string {
+    return generateAppLink(options);
   }
 
   /**
    * Closes the Banner and removes it from the DOM
    */
   public closeBanner(): void {
-    if (this.config && this.dialog) {
+    if (getConfig<boolean>('initialized') && this.dialog) {
       this.dialog.close();
       this.trackEvent('Banner Close');
     } else {
@@ -271,54 +254,31 @@ class MyShoefitter {
   }
 
   /**
-   * Generates the link incl. all params that opens in the iframe
-   * @returns https://dialog.myshoefitter.com/?....
-   */
-  private generateBannerLink(): string {
-    if (!this.config?.productId) {
-      console.warn('mySHOEFITTER: No productId found!')
-      return '';
-    }
-
-    const protocol = this.bannerOrigin.includes('localhost') ? 'http' : 'https';
-    let bannerHost = protocol + '://' + this.bannerOrigin;
-
-    const clientType = this.detectClient();
-    // Open banner on desktop if client is desktop.
-    // Open pwa on mobile and tablet
-    if (clientType === 'desktop') {
-      bannerHost = bannerHost + '/desktop';
-    } else if (this.params?.product) {
-      // If product is set, open camera. Oherwise open home page.
-      bannerHost = bannerHost + '/camera';
-    }
-
-    const url = bannerHost + '?' + new URLSearchParams(this.params as unknown as Record<string, string>).toString();
-    console.log('mySHOEFITTER: Banner URL', url);
-
-    return url;
-  }
-
-  /**
    * Find the button in html and add click listener
    */
   private addButton(): void {
+    const currentConfig = getConfig().config;
 
-    if (!this.config?.productId) {
+    if (!currentConfig.productId) {
       return;
     }
 
     // Only show button on enabled products
-    if (this.config?.enabledProductIds?.length && !this.config?.enabledProductIds?.includes(String(this.config.productId))) {
-      console.log('mySHOEFITTER: Button hidden on Product', this.config?.productId);
+    if (currentConfig.enabledProductIds?.length && !currentConfig.enabledProductIds?.includes(String(currentConfig.productId))) {
+      console.log('mySHOEFITTER: Button hidden on Product', currentConfig.productId);
       return;
     }
 
-    let button = document.getElementById(this.config?.button?.attributes?.id || 'myshoefitter-button');
+    // We need to access the button config which isn't in the provided Config interface
+    // Assuming it's added to the config object during initialization
+    const extendedConfig = getConfig() as any;
+    const buttonConfig = extendedConfig.config?.button;
 
-    const attachTo = this.config?.button?.attachTo;
-    const position = this.config?.button?.position || 'after';
-    const shopSystem = this.config?.shopSystem;
+    let button = document.getElementById(buttonConfig?.attributes?.id || 'myshoefitter-button');
+
+    const attachTo = buttonConfig?.attachTo;
+    const position = buttonConfig?.position || 'after';
+    const shopSystem = currentConfig.shopSystem;
 
     if (!button && attachTo) {
       button = this.injectButton(attachTo, position);
@@ -328,7 +288,7 @@ class MyShoefitter {
       button = this.injectButton(selector, position);
       console.log(`mySHOEFITTER: Button injected ${position}: ${selector}`);
     }
-  
+
     if (button) {
       button.addEventListener('click', (event: Event) => {
         event.preventDefault();
@@ -369,7 +329,11 @@ class MyShoefitter {
    * @param event MessageEvent
    */
   private handleMessage(event: MessageEvent<CustomEvent>): void {
-    console.log('mySHOEFITTER: Event', event.data);
+    const logsEnabled = getConfig<boolean>('config.logsEnabled');
+    if (logsEnabled) {
+      console.log('mySHOEFITTER: Event', event.data);
+    }
+
     // Block all unwanted events
     if (!event?.origin?.includes(this.bannerOrigin) || !event?.data?.type || !event?.data?.data) {
       return;
@@ -383,7 +347,7 @@ class MyShoefitter {
     } else if (event?.data?.type === 'BANNER' && (event?.data?.data?.action === 'resize' || event?.data?.data?.action === 'load')) {
       // Resize iframe to fit content
       const iframe = this.dialog?.children?.item(0) as HTMLIFrameElement;
-      const isDesktop = this.detectClient() === 'desktop';
+      const isDesktop = detectClient() === 'desktop';
       if (this.dialog?.style && iframe && isDesktop && event.data.data.height && event.data.data.width) {
         this.dialog.style.height = event.data.data.height + "px";
         this.dialog.style.width = event.data.data.width + "px";
@@ -400,7 +364,6 @@ class MyShoefitter {
    * Extracted from https://api.pirsch.io/pirsch-events.js
    */
   private async trackEvent(eventName: string) {
-
     return;
 
     // Don't send request on localhost
@@ -429,7 +392,6 @@ class MyShoefitter {
   }
 
   private getShopSystemConfig(shopSystem: string): ShopSystemConfig {
-
     const config: ShopSystemConfig = {
       sku: null,
       selector: ''
@@ -482,20 +444,6 @@ class MyShoefitter {
     }
   }
 
-  private getHostname() {
-    try {
-      const url = new URL(window.location.href);
-      const hostname = url?.hostname;
-      return hostname;
-    } catch (error) {
-      return undefined;
-    }
-  }
-
-  private getCurrentUrl() {
-    return window.location.href;
-  }
-
   /**
    * Automatically injects the myshoefitter button into the dom
    *
@@ -503,7 +451,6 @@ class MyShoefitter {
    * @param position place button before or after the element
    */
   private injectButton(attachTo: string, position: ButtonPosition = 'after') {
-
     if (!attachTo) {
       console.error('mySHOEFITTER: Please provide a valid css selector to attach the button to.');
       return null;
@@ -511,19 +458,24 @@ class MyShoefitter {
 
     // Select the existing button
     const addToCartButton: HTMLElement | null = document.querySelector(attachTo);
-  
+
     if (addToCartButton) {
       // Create a new button element
       const mysfButton: HTMLButtonElement = document.createElement('button');
-  
+
       // Set properties on the new button
       mysfButton.id = 'myshoefitter-button'; // Set the button id
-      mysfButton.innerHTML = this.config?.button?.text || this.getButtonText(); // Set the button text
+
+      // Get button config
+      const extendedConfig = getConfig() as any;
+      const buttonConfig = extendedConfig.config?.button;
+
+      mysfButton.innerHTML = buttonConfig?.text || this.getButtonText(); // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
       // Add custom attributes
-      if (this.config?.button?.attributes) {
-        Object.entries(this.config.button.attributes).forEach(([key, value]) => {
+      if (buttonConfig?.attributes) {
+        Object.entries(buttonConfig.attributes as Record<string, string>).forEach(([key, value]: [string, string]) => {
           mysfButton.setAttribute(key, value);
         });
       }
@@ -547,16 +499,14 @@ class MyShoefitter {
       };
 
       // Merge styles from config into the default styles
-      if (this.config?.button?.styles) {
-        styles = { ...styles, ...this.config.button.styles }
+      if (buttonConfig?.styles) {
+        styles = { ...styles, ...buttonConfig.styles }
       }
 
       for (const [key, value] of Object.entries(styles)) {
         mysfButton.style[key as any] = value as string;
       }
 
-      // Add any other attributes or event listeners to the new button as needed
-  
       // Insert the new button before or after the existing button in the DOM
       if (position === 'before') {
         addToCartButton.parentNode?.insertBefore(mysfButton, addToCartButton);
@@ -570,7 +520,6 @@ class MyShoefitter {
     }
     return null;
   }
-
 }
 
 // Expose class to parent page

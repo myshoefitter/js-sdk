@@ -1,6 +1,5 @@
 export interface myShoeFitter {
-  getQrCode(): string; // Returns SVG string
-  getCameraLink(): string; // Returns the camera link URL
+  getLink(): string; // Returns SVG string
   init(config: ScriptConfig): void;
 }
 
@@ -46,4 +45,8 @@ export type ButtonPosition = 'before' | 'after';
 export interface ShopSystemConfig {
   sku: string | number | null;
   selector: string;
+}
+
+export interface LinkOptions {
+  clientType?: 'mobile' | 'desktop';
 }
