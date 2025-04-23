@@ -1,3 +1,5 @@
+import { generateAppLink } from "../utils/helpers";
+
 export function fibbl() {
   console.log('mySHOEFITTER: Fibbl integration executed!');
 
@@ -34,7 +36,7 @@ export function fibbl() {
       z-index: 1;
     `;
 
-    const mysfAppUrl = window.myshoefitter.getCameraLink();
+    const mysfAppUrl = generateAppLink({ clientType: 'mobile' });
     const encodedUrl = encodeURIComponent(mysfAppUrl);
 
     console.log('MYSF APP URL', mysfAppUrl)
