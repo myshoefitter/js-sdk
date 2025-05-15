@@ -82,6 +82,9 @@ export default class FibblCustomizer implements Integration {
       // On desktop: customization behavior
       newButton.addEventListener('click', () => {
         console.log('Desktop device detected, showing customized overlay');
+        // First restore the original content to ensure we start with a clean state
+        this.restoreOriginalContent();
+        // Then customize the QR code content
         this.customizeQrCodeContent();
       });
     }
@@ -107,8 +110,10 @@ export default class FibblCustomizer implements Integration {
       // Add click listeners to all other buttons to restore original state
       buttons.forEach(button => {
         if (!button.hasAttribute('data-size-button')) {
+          // Use a new click listener that first removes any previous customizations
           button.addEventListener('click', () => {
             console.log('Original fibbl button clicked, restoring state');
+            // Important: restore original content BEFORE fibbl changes it
             this.restoreOriginalContent();
           });
         }
@@ -197,14 +202,20 @@ export default class FibblCustomizer implements Integration {
       const fibblQrCode = document.querySelector('fibbl-qr-code');
 
       if (fibblQrCode?.shadowRoot) {
-        this.performCustomizations(fibblQrCode);
+        // Wait a short moment to ensure the fibbl content is fully rendered
+        setTimeout(() => {
+          this.performCustomizations(fibblQrCode);
+        }, 50);
       } else {
         // Wait for QR code to appear
         const observer = new MutationObserver(() => {
           const fibblQrCode = document.querySelector('fibbl-qr-code');
           if (fibblQrCode?.shadowRoot) {
             observer.disconnect();
-            this.performCustomizations(fibblQrCode);
+            // Wait a short moment to ensure the fibbl content is fully rendered
+            setTimeout(() => {
+              this.performCustomizations(fibblQrCode);
+            }, 50);
           }
         });
 
@@ -221,122 +232,46 @@ export default class FibblCustomizer implements Integration {
   }
 
   /**
- * Update QR code only if needed
- */
-  private updateQrCodeIfNeeded(fibblQrCode: Element): void {
+   * Store original state with complete details
+   */
+  private storeOriginalState(fibblQrCode: Element): void {
     if (!fibblQrCode.shadowRoot) return;
 
-    const qrCodeWrapper = fibblQrCode.shadowRoot.querySelector('#qr-code-wrapper') as HTMLElement | null;
-    if (!qrCodeWrapper) return;
-
-    const existingOverlay = qrCodeWrapper.querySelector('.custom-qr-code-overlay');
-    if (existingOverlay) return; // Already customized
-
-    const originalQrCode = qrCodeWrapper.querySelector('x-fibbl-qr-code');
-    if (!originalQrCode) return;
-
-    if (!fibblQrCode.shadowRoot) return;
-
-    // Store customization state
-    this.isCustomized = true;
-
-    // Customize message element - IMPROVED STORAGE
-    const message = fibblQrCode.shadowRoot.querySelector('.message') as HTMLElement | null;
-    if (message && message.textContent) {
-      // Store the complete original HTML rather than just text
-      if (!this.customizations.has('message')) {
+    try {
+      // Store message content if not already stored
+      const message = fibblQrCode.shadowRoot.querySelector('.message') as HTMLElement | null;
+      if (message && !this.customizations.has('message')) {
+        console.log('Storing original message content');
         this.customizations.set('message', {
-          original: message.innerHTML, // Store innerHTML instead of textContent
-          modified: true
+          original: message.innerHTML,
+          modified: false
         });
       }
 
-      // Replace specific text only
-      message.textContent = message.textContent.replace('try it on', 'find your size');
-    }
-
-    // Customize see-button element - IMPROVED STORAGE
-    const seeButton = fibblQrCode.shadowRoot.querySelector('#see-button') as HTMLElement | null;
-    if (seeButton && seeButton.textContent) {
-      // Store the complete original button state if not already stored
-      if (!this.customizations.has('see-button')) {
+      // Store see button content if not already stored
+      const seeButton = fibblQrCode.shadowRoot.querySelector('#see-button') as HTMLElement | null;
+      if (seeButton && !this.customizations.has('see-button')) {
+        console.log('Storing original see-button content');
         this.customizations.set('see-button', {
-          original: seeButton.innerHTML, // Store innerHTML instead of just text
-          modified: true
+          original: seeButton.innerHTML,
+          modified: false
         });
       }
 
-      // Replace text and set up click handler
-      seeButton.textContent = 'Find my size';
-
-      // Clone to remove existing listeners
-      const newSeeButton = seeButton.cloneNode(true) as HTMLElement;
-      if (seeButton.parentNode) {
-        seeButton.parentNode.replaceChild(newSeeButton, seeButton);
-      }
-
-      // Add click handler
-      newSeeButton.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (this.isMobileDevice()) {
-          window.open(this.customQrCodeUrl, '_blank');
-        }
-      });
-    }
-
-    // Customize QR code
-    if (qrCodeWrapper) {
-      // Store info for restoration
-      this.customizations.set('qr-code-wrapper', {
-        original: 'original',
-        modified: true
-      });
-
-      const originalQrCode = qrCodeWrapper.querySelector('x-fibbl-qr-code');
-      const existingOverlay = qrCodeWrapper.querySelector('.custom-qr-code-overlay');
-
-      if (originalQrCode && !existingOverlay) {
-        // Create and position overlay
-        const overlayContainer = document.createElement('div');
-        overlayContainer.className = 'custom-qr-code-overlay';
-        overlayContainer.style.position = 'absolute';
-        overlayContainer.style.top = '0';
-        overlayContainer.style.left = '0';
-        // overlayContainer.style.width = '100%';
-        // overlayContainer.style.height = '100%';
-        overlayContainer.style.zIndex = '10';
-        overlayContainer.style.padding = '10px';
-        overlayContainer.style.borderRadius = '10px';
-
-        // Create image
-        const newQrCode = document.createElement('img');
-        newQrCode.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(this.customQrCodeUrl);
-        newQrCode.alt = 'Size Finder QR Code';
-        newQrCode.style.width = '100%';
-        newQrCode.style.height = '100%';
-        newQrCode.style.objectFit = 'contain';
-
-        // Make the QR code clickable on all devices
-        overlayContainer.style.cursor = 'pointer';
-        overlayContainer.addEventListener('click', () => {
-          window.open(this.customQrCodeUrl, '_blank');
+      // Store QR code state if not already stored
+      const qrCodeWrapper = fibblQrCode.shadowRoot.querySelector('#qr-code-wrapper') as HTMLElement | null;
+      if (qrCodeWrapper && !this.customizations.has('qr-code-wrapper')) {
+        console.log('Storing original QR code wrapper state');
+        // We're storing a deeper clone of the wrapper for better restoration
+        const clonedWrapper = qrCodeWrapper.cloneNode(true);
+        this.customizations.set('qr-code-wrapper', {
+          original: qrCodeWrapper.innerHTML,
+          modified: false
         });
-
-        overlayContainer.appendChild(newQrCode);
-
-        // Ensure proper positioning
-        const currentPosition = window.getComputedStyle(qrCodeWrapper).position;
-        if (currentPosition === 'static') {
-          qrCodeWrapper.style.position = 'relative';
-        }
-
-        qrCodeWrapper.appendChild(overlayContainer);
       }
+    } catch (e) {
+      console.error('Error storing original state:', e);
     }
-
-    // Set up continuous monitoring
-    this.monitorForChanges(fibblQrCode);
   }
 
   /**
@@ -345,65 +280,119 @@ export default class FibblCustomizer implements Integration {
   private performCustomizations(fibblQrCode: Element): void {
     if (!fibblQrCode.shadowRoot) return;
 
-    // Set state first
-    this.isCustomized = true;
-
-    // Store original state first, before making changes
+    // First ensure we've stored the original state
     this.storeOriginalState(fibblQrCode);
 
-    // Apply customizations separately
-    this.applyCustomizations(fibblQrCode);
+    // Set state flag
+    this.isCustomized = true;
 
-    // Set up monitoring afterward
-    this.monitorForChanges(fibblQrCode);
+    try {
+      // Customize message
+      const message = fibblQrCode.shadowRoot.querySelector('.message') as HTMLElement | null;
+      if (message && message.textContent) {
+        console.log('Customizing message:', message.textContent);
+        message.textContent = message.textContent.replace('try it on', 'find your size');
+
+        // Mark as modified
+        if (this.customizations.has('message')) {
+          this.customizations.get('message')!.modified = true;
+        }
+      }
+
+      // Customize see-button
+      const seeButton = fibblQrCode.shadowRoot.querySelector('#see-button') as HTMLElement | null;
+      if (seeButton) {
+        console.log('Customizing see-button');
+        // Clone to remove existing listeners
+        const newSeeButton = seeButton.cloneNode(true) as HTMLElement;
+        newSeeButton.textContent = 'Find my size';
+
+        if (seeButton.parentNode) {
+          seeButton.parentNode.replaceChild(newSeeButton, seeButton);
+        }
+
+        // Add click handler for the new button
+        newSeeButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open(this.customQrCodeUrl, '_blank');
+        });
+
+        // Mark as modified
+        if (this.customizations.has('see-button')) {
+          this.customizations.get('see-button')!.modified = true;
+        }
+      }
+
+      // Customize QR code
+      const qrCodeWrapper = fibblQrCode.shadowRoot.querySelector('#qr-code-wrapper') as HTMLElement | null;
+      if (qrCodeWrapper) {
+        console.log('Customizing QR code wrapper');
+        const originalQrCode = qrCodeWrapper.querySelector('x-fibbl-qr-code');
+        const existingOverlay = qrCodeWrapper.querySelector('.custom-qr-code-overlay');
+
+        if (originalQrCode && !existingOverlay) {
+          // Create and position overlay
+          const overlayContainer = document.createElement('div');
+          overlayContainer.className = 'custom-qr-code-overlay';
+          overlayContainer.style.position = 'absolute';
+          overlayContainer.style.top = '0';
+          overlayContainer.style.left = '0';
+          overlayContainer.style.zIndex = '10';
+          overlayContainer.style.padding = '10px';
+          overlayContainer.style.borderRadius = '10px';
+
+          // Create image
+          const newQrCode = document.createElement('img');
+          newQrCode.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(this.customQrCodeUrl);
+          newQrCode.alt = 'Size Finder QR Code';
+          newQrCode.style.width = '100%';
+          newQrCode.style.height = '100%';
+          newQrCode.style.objectFit = 'contain';
+
+          // Make the QR code clickable on all devices
+          overlayContainer.style.cursor = 'pointer';
+          overlayContainer.addEventListener('click', () => {
+            window.open(this.customQrCodeUrl, '_blank');
+          });
+
+          overlayContainer.appendChild(newQrCode);
+
+          // Ensure proper positioning
+          const currentPosition = window.getComputedStyle(qrCodeWrapper).position;
+          if (currentPosition === 'static') {
+            qrCodeWrapper.style.position = 'relative';
+          }
+
+          qrCodeWrapper.appendChild(overlayContainer);
+
+          // Mark as modified
+          if (this.customizations.has('qr-code-wrapper')) {
+            this.customizations.get('qr-code-wrapper')!.modified = true;
+          }
+        }
+      }
+
+      // Start observing for changes to maintain customizations
+      this.monitorForChanges(fibblQrCode);
+    } catch (e) {
+      console.error('Error performing customizations:', e);
+    }
   }
 
   /**
- * Store original state separately
- */
-  private storeOriginalState(fibblQrCode: Element): void {
-    if (!fibblQrCode.shadowRoot) return;
-
-    // Message element
-    const message = fibblQrCode.shadowRoot.querySelector('.message') as HTMLElement | null;
-    if (message && !this.customizations.has('message')) {
-      this.customizations.set('message', {
-        original: message.innerHTML,
-        modified: false
-      });
-    }
-
-    // See button
-    const seeButton = fibblQrCode.shadowRoot.querySelector('#see-button') as HTMLElement | null;
-    if (seeButton && !this.customizations.has('see-button')) {
-      this.customizations.set('see-button', {
-        original: seeButton.innerHTML,
-        modified: false
-      });
-    }
-
-    // QR code wrapper
-    if (!this.customizations.has('qr-code-wrapper')) {
-      this.customizations.set('qr-code-wrapper', {
-        original: 'original',
-        modified: false
-      });
-    }
-  }
-
-  /**
-   * Monitor for changes with anti-recursion protection
+   * Monitor for changes with improved handling
    */
   private monitorForChanges(fibblQrCode: Element): void {
     if (!fibblQrCode.shadowRoot || !this.isCustomized) return;
 
-    // Clear any previous observer for this element
+    // First, disconnect any existing shadow observers
     this.disconnectShadowObservers();
 
     // Create a new observer with unique ID
     const observerId = ++this.observerIds;
     const observer = new MutationObserver((mutations) => {
-      // Prevent recursion and debounce updates
+      // Prevent recursion
       if (this.isUpdating) return;
 
       // Cancel any pending update
@@ -411,23 +400,28 @@ export default class FibblCustomizer implements Integration {
         window.clearTimeout(this.updateDebounceTimeout);
       }
 
-      // Debounce to prevent excessive updates
+      // Debounce updates to prevent excessive DOM manipulations
       this.updateDebounceTimeout = window.setTimeout(() => {
-        // Only update if we're still in customized state
-        if (this.isCustomized) {
+        // Only update if we're still in customized state and the element is still in the DOM
+        if (this.isCustomized && document.contains(fibblQrCode)) {
           this.isUpdating = true;
-          this.applyCustomizations(fibblQrCode);
 
-          // Reset the flag after a short delay to allow DOM to settle
+          // Maintain our customizations
+          this.maintainCustomizations(fibblQrCode);
+
+          // Reset the flag after a delay
           setTimeout(() => {
             this.isUpdating = false;
             this.updateDebounceTimeout = null;
           }, 50);
+        } else {
+          // Element is no longer in DOM or we're not in customized state
+          this.disconnectShadowObservers();
         }
       }, 100);
     });
 
-    // Start observing with limited scope
+    // Start observing with more targeted scope
     observer.observe(fibblQrCode.shadowRoot, {
       childList: true,
       subtree: true,
@@ -444,7 +438,88 @@ export default class FibblCustomizer implements Integration {
         observer.disconnect();
         this.activeObservers.delete(observerId);
       }
-    }, 60 * 1000); // 1 minute max observation time
+    }, 30 * 1000); // 30 seconds max observation time
+  }
+
+  /**
+   * Maintain customizations during DOM changes
+   */
+  private maintainCustomizations(fibblQrCode: Element): void {
+    if (!fibblQrCode.shadowRoot || !this.isCustomized) return;
+
+    try {
+      // Check for message changes
+      const message = fibblQrCode.shadowRoot.querySelector('.message') as HTMLElement | null;
+      if (message && message.textContent && message.textContent.includes('try it on')) {
+        console.log('Maintaining message customization');
+        message.textContent = message.textContent.replace('try it on', 'find your size');
+      }
+
+      // Check for see-button changes
+      const seeButton = fibblQrCode.shadowRoot.querySelector('#see-button') as HTMLElement | null;
+      if (seeButton && (!seeButton.textContent || seeButton.textContent !== 'Find my size')) {
+        console.log('Maintaining see-button customization');
+        seeButton.textContent = 'Find my size';
+
+        // Re-add click handler if needed
+        const hasClickHandler = seeButton.onclick !== null;
+        if (!hasClickHandler) {
+          seeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(this.customQrCodeUrl, '_blank');
+          });
+        }
+      }
+
+      // Check QR code overlay
+      const qrCodeWrapper = fibblQrCode.shadowRoot.querySelector('#qr-code-wrapper') as HTMLElement | null;
+      if (qrCodeWrapper) {
+        const existingOverlay = qrCodeWrapper.querySelector('.custom-qr-code-overlay');
+        if (!existingOverlay && this.customizations.has('qr-code-wrapper') &&
+          this.customizations.get('qr-code-wrapper')!.modified) {
+          console.log('Restoring QR code overlay');
+
+          // Create and position overlay
+          const overlayContainer = document.createElement('div');
+          overlayContainer.className = 'custom-qr-code-overlay';
+          overlayContainer.style.position = 'absolute';
+          overlayContainer.style.top = '0';
+          overlayContainer.style.left = '0';
+          overlayContainer.style.width = '100%';
+          overlayContainer.style.height = '100%';
+          overlayContainer.style.zIndex = '10';
+          overlayContainer.style.padding = '10px';
+          overlayContainer.style.borderRadius = '10px';
+
+          // Create image
+          const newQrCode = document.createElement('img');
+          newQrCode.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(this.customQrCodeUrl);
+          newQrCode.alt = 'Size Finder QR Code';
+          newQrCode.style.width = '100%';
+          newQrCode.style.height = '100%';
+          newQrCode.style.objectFit = 'contain';
+
+          // Make the QR code clickable
+          overlayContainer.style.cursor = 'pointer';
+          overlayContainer.addEventListener('click', () => {
+            window.open(this.customQrCodeUrl, '_blank');
+          });
+
+          overlayContainer.appendChild(newQrCode);
+
+          // Ensure proper positioning
+          const currentPosition = window.getComputedStyle(qrCodeWrapper).position;
+          if (currentPosition === 'static') {
+            qrCodeWrapper.style.position = 'relative';
+          }
+
+          qrCodeWrapper.appendChild(overlayContainer);
+        }
+      }
+    } catch (e) {
+      console.error('Error maintaining customizations:', e);
+    }
   }
 
   /**
@@ -456,39 +531,15 @@ export default class FibblCustomizer implements Integration {
   }
 
   /**
-  * Apply customizations with anti-recursion protection
-  */
-  private applyCustomizations(fibblQrCode: Element): void {
-    if (!fibblQrCode.shadowRoot) return;
-
-    try {
-      // Simplified application - only make changes that are needed
-      const message = fibblQrCode.shadowRoot.querySelector('.message') as HTMLElement | null;
-      if (message && message.textContent && message.textContent.includes('try it on')) {
-        message.textContent = message.textContent.replace('try it on', 'find your size');
-      }
-
-      const seeButton = fibblQrCode.shadowRoot.querySelector('#see-button') as HTMLElement | null;
-      if (seeButton && seeButton.textContent && seeButton.textContent !== 'Find my size') {
-        seeButton.textContent = 'Find my size';
-      }
-
-      // QR code customization (only if needed)
-      this.updateQrCodeIfNeeded(fibblQrCode);
-    } catch (e) {
-      console.error('Error applying customizations:', e);
-    }
-  }
-
-  /**
-   * Restore original content with better cleanup
+   * Restore original content with complete restoration
    */
   private restoreOriginalContent(): void {
-    // Disconnect observers first to avoid recursive updates
+    // Immediately disconnect all observers to prevent interference
     this.disconnectShadowObservers();
 
-    // Set customization state to false
+    // Reset state
     this.isCustomized = false;
+    this.isUpdating = false;
 
     // Clear any pending updates
     if (this.updateDebounceTimeout !== null) {
@@ -497,74 +548,68 @@ export default class FibblCustomizer implements Integration {
     }
 
     const fibblQrCode = document.querySelector('fibbl-qr-code');
-    if (!fibblQrCode?.shadowRoot) return;
+    if (!fibblQrCode?.shadowRoot) {
+      console.log('No fibbl-qr-code element found to restore');
+      return;
+    }
+
+    console.log('Restoring original content');
 
     try {
-      // IMPROVED: Restore message with complete replacement
-      if (this.customizations.has('message')) {
+      // Restore message if it was modified
+      if (this.customizations.has('message') && this.customizations.get('message')!.modified) {
         const message = fibblQrCode.shadowRoot.querySelector('.message') as HTMLElement | null;
         if (message) {
-          // Use innerHTML instead of textContent for complete restoration
-          const originalHtml = this.customizations.get('message')?.original || '';
-
-          // Create a new element to replace the existing one
-          const newMessage = document.createElement('div');
-          newMessage.className = 'message';
-          newMessage.innerHTML = originalHtml;
-
-          // Copy all attributes except class
-          Array.from(message.attributes).forEach(attr => {
-            if (attr.name !== 'class') {
-              newMessage.setAttribute(attr.name, attr.value);
-            }
-          });
-
-          // Replace the original
-          if (message.parentNode) {
-            message.parentNode.replaceChild(newMessage, message);
-          }
+          const originalHtml = this.customizations.get('message')!.original;
+          message.innerHTML = originalHtml;
+          console.log('Restored original message:', originalHtml);
+          this.customizations.get('message')!.modified = false;
         }
       }
 
-      // IMPROVED: Restore see-button with complete replacement
-      if (this.customizations.has('see-button')) {
+      // Restore see-button if it was modified
+      if (this.customizations.has('see-button') && this.customizations.get('see-button')!.modified) {
         const seeButton = fibblQrCode.shadowRoot.querySelector('#see-button') as HTMLElement | null;
         if (seeButton) {
-          // Create a completely new button element
+          // Create a new button to replace the modified one
           const newButton = document.createElement('button');
           newButton.id = 'see-button';
 
-          // Restore original HTML content
-          newButton.innerHTML = this.customizations.get('see-button')?.original || '';
-
-          // Copy all attributes except id
+          // Copy attributes from the current button
           Array.from(seeButton.attributes).forEach(attr => {
             if (attr.name !== 'id') {
               newButton.setAttribute(attr.name, attr.value);
             }
           });
 
-          // Replace the modified button
+          // Restore original content
+          newButton.innerHTML = this.customizations.get('see-button')!.original;
+
+          // Replace the button
           if (seeButton.parentNode) {
             seeButton.parentNode.replaceChild(newButton, seeButton);
+            console.log('Restored original see-button');
           }
+
+          this.customizations.get('see-button')!.modified = false;
         }
       }
 
-      // Remove custom QR overlay
-      if (this.customizations.has('qr-code-wrapper')) {
+      // Remove QR code overlay if it exists
+      if (this.customizations.has('qr-code-wrapper') && this.customizations.get('qr-code-wrapper')!.modified) {
         const qrCodeWrapper = fibblQrCode.shadowRoot.querySelector('#qr-code-wrapper') as HTMLElement | null;
         if (qrCodeWrapper) {
           const customOverlay = qrCodeWrapper.querySelector('.custom-qr-code-overlay');
           if (customOverlay) {
             customOverlay.remove();
+            console.log('Removed custom QR code overlay');
           }
+
+          this.customizations.get('qr-code-wrapper')!.modified = false;
         }
       }
-
-      console.log('Original content restored');
     } catch (e) {
-      console.error('Error restoring content:', e);
+      console.error('Error while restoring original content:', e);
     }
   }
 
