@@ -1,6 +1,7 @@
 import { dc, magento, shopify, woocommerce, oxid, shopware } from './shop-adapters/index';
-import { fibbl } from './integrations/index';
-import { BannerParams, ButtonPosition, CustomEvent, EventTypes, LinkOptions, myShoeFitter, ScriptConfig, ShopSystemConfig } from './types/types';
+// Import all integrations directly
+import FibblCustomizer from './integrations/fibbl';
+import { BannerParams, ButtonPosition, CustomEvent, EventTypes, Integration, IntegrationItem, IntegrationOptions, LinkOptions, myShoeFitter, ScriptConfig, ShopSystemConfig } from './types/types';
 import { detectClient, generateAppLink, getHostname } from './utils/helpers';
 import { getConfig, updateConfig, getBannerParams } from './utils/config';
 
@@ -16,10 +17,12 @@ class MyShoefitter {
   private bannerOrigin: string;
   // Shop systems width available adapters
   private readonly supportedShopSystems = ['woocommerce', 'shopify', 'magento', 'shopware', 'oxid', 'prestashop', 'bigcommerce', 'dc', 'custom'];
-  // Integrations that can be used to extend the script
-  private readonly supportedIntegrations = [{
-    'fibbl': fibbl
-  }];
+  // Registry of available integrations
+  private readonly integrationRegistry: Record<string, new () => Integration> = {
+    'fibbl': FibblCustomizer
+  };
+  // Track active integration instances
+  private activeIntegrations: Integration[] = [];
   // Callback for events
   private callback?: (event: CustomEvent) => void;
 
@@ -81,20 +84,36 @@ class MyShoefitter {
 
     // Handle integrations
     if (currentConfig?.integrations?.length) {
-      // Loop through each integration specified in the configuration
-      currentConfig.integrations.forEach((integrationName: string) => {
-        // Find the integration object that has the key matching integrationName
-        const integrationObj = this.supportedIntegrations.find(integration => integration.hasOwnProperty(integrationName));
-
-        if (integrationObj) {
-          // Use a type assertion to let TypeScript know that the integration object is indexable
-          const integrationHandler = (integrationObj as Record<string, any>)[integrationName];
-
-          if (typeof integrationHandler === 'function') {
-            integrationHandler();
+      // Process each integration item
+      (currentConfig.integrations as IntegrationItem[]).forEach((integrationItem: IntegrationItem) => {
+        const integrationEntries = Object.entries(integrationItem);
+        
+        if (integrationEntries.length === 0) {
+          console.warn('mySHOEFITTER: Empty integration object found.');
+          return;
+        }
+        
+        const [integrationName, integrationOptions] = integrationEntries[0];
+        
+        // Skip if the integration is explicitly set to inactive
+        if (!integrationOptions.active) {
+          console.log(`mySHOEFITTER: Integration "${integrationName}" is disabled.`);
+          return;
+        }
+        
+        // Check if the integration is registered
+        const IntegrationClass = this.integrationRegistry[integrationName];
+        if (IntegrationClass) {
+          try {
+            // Create a new instance
+            const instance = new IntegrationClass();
+            // Initialize with options
+            instance.init(integrationOptions);
+            // Store instance for lifecycle management
+            this.activeIntegrations.push(instance);
             console.log(`mySHOEFITTER: Initialized integration: ${integrationName}`);
-          } else {
-            console.warn(`mySHOEFITTER: Integration "${integrationName}" does not have an init function.`);
+          } catch (error) {
+            console.error(`mySHOEFITTER: Error initializing integration "${integrationName}":`, error);
           }
         } else {
           console.warn(`mySHOEFITTER: Integration "${integrationName}" is not supported.`);
@@ -136,11 +155,55 @@ class MyShoefitter {
   }
 
   /**
+   * Helper method to register a new integration
+   * @param name Integration name
+   * @param IntegrationClass Integration class constructor
+   */
+  public registerIntegration(name: string, IntegrationClass: new () => Integration): void {
+    this.integrationRegistry[name] = IntegrationClass;
+  }
+
+  /**
+   * Clean up all active integrations
+   */
+  private destroyIntegrations(): void {
+    this.activeIntegrations.forEach(integration => {
+      if (integration.destroy) {
+        try {
+          integration.destroy();
+        } catch (error) {
+          console.error('mySHOEFITTER: Error destroying integration:', error);
+        }
+      }
+    });
+    this.activeIntegrations = [];
+  }
+
+  /**
    * Listen to public events from the iframe
    * @param callback (event: string) => void
    */
   public events(callback: (event: CustomEvent) => void) {
     this.callback = callback;
+  }
+  
+  /**
+   * Public method to destroy and clean up the MyShoefitter instance
+   * Call this when the script is no longer needed
+   */
+  public destroy(): void {
+    // Clean up integrations
+    this.destroyIntegrations();
+    
+    // Remove event listeners
+    window.removeEventListener('message', (event) => this.handleMessage(event));
+    
+    // Close any open dialog
+    if (this.dialog && this.dialog.open) {
+      this.dialog.close();
+    }
+    
+    console.log('mySHOEFITTER: Instance destroyed');
   }
 
   /**
@@ -248,6 +311,7 @@ class MyShoefitter {
     if (getConfig<boolean>('initialized') && this.dialog) {
       this.dialog.close();
       this.trackEvent('Banner Close');
+      this.destroyMessageEventListener();
     } else {
       console.warn('mySHOEFITTER is not initialized');
     }
@@ -523,7 +587,13 @@ class MyShoefitter {
 }
 
 // Expose class to parent page
-window.myshoefitter = new MyShoefitter();
+const myshoefitterInstance = new MyShoefitter();
+window.myshoefitter = myshoefitterInstance;
+
+// Clean up when the page is unloaded
+window.addEventListener('beforeunload', () => {
+  myshoefitterInstance.destroy();
+});
 
 declare global {
   interface Window {

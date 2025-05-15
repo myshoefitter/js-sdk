@@ -67,7 +67,7 @@ export function generateAppLink(options?: LinkOptions): string {
     params.product = 'test';
   }
 
-  const protocol = bannerOrigin.includes('localhost') ? 'http' : 'https';
+  const protocol = bannerOrigin?.includes('localhost') ? 'http' : 'https';
   let bannerHost = protocol + '://' + bannerOrigin;
 
   const clientType = options?.clientType || detectClient();

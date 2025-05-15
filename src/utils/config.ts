@@ -3,21 +3,12 @@
  * Allows sharing configuration and state between different parts of the application
  */
 
+import { ScriptConfig } from "../types/types";
+
 // Types
 export interface Config {
   // Configuration
-  config: {
-    shopId?: string;
-    productId?: string | number;
-    shopSystem?: string;
-    bannerOrigin: string;
-    enabledProductIds?: (string | number)[];
-    disabledProductIds?: (string | number)[];
-    enabledProductNames?: string[];
-    disabledProductNames?: string[];
-    logsEnabled?: boolean;
-    integrations?: string[];
-  };
+  config: ScriptConfig;
   // Runtime state
   initialized: boolean;
 }

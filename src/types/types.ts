@@ -1,6 +1,9 @@
 export interface myShoeFitter {
-  getLink(): string; // Returns SVG string
+  getLink(options?: LinkOptions): string; // Returns SVG string
   init(config: ScriptConfig): void;
+  showBanner(): void;
+  closeBanner(): void;
+  events(callback: (event: CustomEvent) => void): void;
 }
 
 export interface ScriptConfig {
@@ -10,8 +13,8 @@ export interface ScriptConfig {
   disabledProductIds?: (string | number)[]; // Product Ids where button should be hidden
   logsEnabled?: boolean;
   shopSystem?: string;
-  bannerOrigin?: boolean; // Override the default banner url
-  integrations?: string[];
+  bannerOrigin?: string; // Override the default banner url
+  integrations?: IntegrationItem[];
   button?: {
     attachTo: string;
     position?: ButtonPosition;
@@ -49,4 +52,39 @@ export interface ShopSystemConfig {
 
 export interface LinkOptions {
   clientType?: 'mobile' | 'desktop';
+}
+
+/**
+ * Interface for integration options
+ * Configuration options for each integration 
+ */
+export interface IntegrationOptions {
+  active: boolean;
+  [key: string]: any; // Allow for additional configuration options
+}
+
+/**
+ * Interface for a single integration item in the array
+ * Each item is an object with a single key (integration name) 
+ * and its corresponding options
+ */
+export interface IntegrationItem {
+  [integrationName: string]: IntegrationOptions;
+}
+
+/**
+ * Interface that all integrations must implement
+ * Defines the required methods for integration lifecycle
+ */
+export interface Integration {
+  /**
+   * Initialize the integration with the provided options
+   * @param options Configuration options for the integration
+   */
+  init(options: IntegrationOptions): void;
+  
+  /**
+   * Optional method to clean up resources when integration is no longer needed
+   */
+  destroy?(): void;
 }
