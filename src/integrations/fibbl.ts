@@ -8,7 +8,6 @@ export default class FibblCustomizer implements Integration {
   private observers: MutationObserver[] = [];
   private customizations: Map<string, { original: string, modified: boolean }> = new Map();
   private isCustomized = false;
-  private customQrCodeUrl = '';
   private mobileBreakpoint = 768; // Breakpoint for mobile devices in pixels
 
   private isUpdating = false; // Flag to prevent recursion
@@ -21,11 +20,6 @@ export default class FibblCustomizer implements Integration {
    * @param options Configuration options from script.ts
    */
   public init(options: IntegrationOptions): void {
-    // Generate app link and pre-load QR code image
-    this.customQrCodeUrl = generateAppLink({ clientType: 'mobile' });
-    const preloadImage = new Image();
-    preloadImage.src = this.customQrCodeUrl;
-
     // Apply any custom options
     if (options.mobileBreakpoint) {
       this.mobileBreakpoint = options.mobileBreakpoint;
@@ -42,6 +36,14 @@ export default class FibblCustomizer implements Integration {
     window.addEventListener('resize', this.handleResize.bind(this));
 
     console.log('FibblCustomizer initialized successfully');
+  }
+
+  /**
+   * Get application link - generated on demand to ensure product ID is available
+   * @returns The app link URL
+   */
+  private getAppLink(): string {
+    return generateAppLink({ clientType: 'mobile' });
   }
 
   /**
@@ -75,8 +77,9 @@ export default class FibblCustomizer implements Integration {
       newButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Mobile device detected, redirecting to:', this.customQrCodeUrl);
-        window.open(this.customQrCodeUrl, '_blank');
+        const appLink = this.getAppLink();
+        console.log('Mobile device detected, redirecting to:', appLink);
+        window.open(appLink, '_blank');
       });
     } else {
       // On desktop: customization behavior
@@ -194,7 +197,7 @@ export default class FibblCustomizer implements Integration {
   private customizeQrCodeContent(): void {
     // If mobile device, redirect instead of customizing
     if (this.isMobileDevice()) {
-      window.open(this.customQrCodeUrl, '_blank');
+      window.open(this.getAppLink(), '_blank');
       return;
     }
 
@@ -315,7 +318,7 @@ export default class FibblCustomizer implements Integration {
         newSeeButton.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          window.open(this.customQrCodeUrl, '_blank');
+          window.open(this.getAppLink(), '_blank');
         });
 
         // Mark as modified
@@ -342,9 +345,10 @@ export default class FibblCustomizer implements Integration {
           overlayContainer.style.padding = '10px';
           overlayContainer.style.borderRadius = '10px';
 
-          // Create image
+          // Create image - generate QR code URL dynamically
+          const appLink = this.getAppLink();
           const newQrCode = document.createElement('img');
-          newQrCode.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(this.customQrCodeUrl);
+          newQrCode.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(appLink);
           newQrCode.alt = 'Size Finder QR Code';
           newQrCode.style.width = '100%';
           newQrCode.style.height = '100%';
@@ -353,7 +357,7 @@ export default class FibblCustomizer implements Integration {
           // Make the QR code clickable on all devices
           overlayContainer.style.cursor = 'pointer';
           overlayContainer.addEventListener('click', () => {
-            window.open(this.customQrCodeUrl, '_blank');
+            window.open(this.getAppLink(), '_blank');
           });
 
           overlayContainer.appendChild(newQrCode);
@@ -467,7 +471,7 @@ export default class FibblCustomizer implements Integration {
           seeButton.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            window.open(this.customQrCodeUrl, '_blank');
+            window.open(this.getAppLink(), '_blank');
           });
         }
       }
@@ -492,9 +496,10 @@ export default class FibblCustomizer implements Integration {
           overlayContainer.style.padding = '10px';
           overlayContainer.style.borderRadius = '10px';
 
-          // Create image
+          // Create image - generate QR code URL dynamically
+          const appLink = this.getAppLink();
           const newQrCode = document.createElement('img');
-          newQrCode.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(this.customQrCodeUrl);
+          newQrCode.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(appLink);
           newQrCode.alt = 'Size Finder QR Code';
           newQrCode.style.width = '100%';
           newQrCode.style.height = '100%';
@@ -503,7 +508,7 @@ export default class FibblCustomizer implements Integration {
           // Make the QR code clickable
           overlayContainer.style.cursor = 'pointer';
           overlayContainer.addEventListener('click', () => {
-            window.open(this.customQrCodeUrl, '_blank');
+            window.open(this.getAppLink(), '_blank');
           });
 
           overlayContainer.appendChild(newQrCode);
