@@ -75,11 +75,11 @@ class MyShoefitter {
 
     // Show error if productId and shopSystem are missing - pwa will not work without these parameters
     if (!currentConfig.productId && !currentConfig.shopSystem) {
-      console.error('mySHOEFITTER: Please provide either productId or shopSystem!');
+      console.warn('mySHOEFITTER: Please provide either productId or shopSystem!');
     }
 
     if (currentConfig.shopSystem && !this.supportedShopSystems.includes(currentConfig.shopSystem)) {
-      console.error('mySHOEFITTER: Shop System is not supported! productId is required.');
+      console.warn('mySHOEFITTER: Shop System is not supported! productId is required.');
     }
 
     // Handle integrations
@@ -134,7 +134,7 @@ class MyShoefitter {
         });
         console.log(`mySHOEFITTER: Product ID found: ${sku}`);
       } else {
-        console.error('mySHOEFITTER: Product ID could not be found! Please set it manually using productId parameter.');
+        console.warn('mySHOEFITTER: Product ID could not be found! Please set it manually using productId parameter.');
       }
     }
 
@@ -366,7 +366,7 @@ class MyShoefitter {
         this.initMessageEventListener();
       });
     } else {
-      console.error(`mySHOEFITTER: Please add 'button' property to the config object or paste button html code manually into your template.`);
+      console.warn(`mySHOEFITTER: Please add 'button' property to the config object or paste button html code manually into your template.`);
     }
   }
 
@@ -516,7 +516,7 @@ class MyShoefitter {
    */
   private injectButton(attachTo: string, position: ButtonPosition = 'after') {
     if (!attachTo) {
-      console.error('mySHOEFITTER: Please provide a valid css selector to attach the button to.');
+      console.warn('mySHOEFITTER: Please provide a valid css selector to attach the button to.');
       return null;
     }
 
