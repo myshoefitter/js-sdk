@@ -1,180 +1,476 @@
-# mySHOEFITTER JS SDK
+# mySHOEFITTER JavaScript SDK
 
-<a href="https://en.myshoefitter.com" target="_blank" className="banner-image">
-  <img src="https://raw.githubusercontent.com/myshoefitter/js-sdk/main/.github/readme/promotion.jpg" alt="mySHOEFITTER Promotion Banner" />
-</a>
+The mySHOEFITTER JavaScript SDK enables seamless integration of AI-powered shoe sizing functionality into your e-commerce platform. Help customers find their perfect fit with just one photo of their foot.
 
-### Simple Integration
-Add the script just before the `</body>` of your website. Make sure you adjust the `shopSystem` property.
-After a successfull implementation, the mySHOEFITTER Button should appear underneath the add to cart button.
+## Features
+
+- 🎯 **AI-Powered Sizing**: Accurate shoe size recommendations using computer vision
+- 🛍️ **Multi-Platform Support**: Works with Shopify, WooCommerce, Magento, and more
+- 📱 **Cross-Device**: Optimized for both desktop and mobile experiences
+- 🎨 **Customizable**: Flexible button styling and logo configuration
+- 🔧 **Easy Integration**: Simple JavaScript setup with automatic product detection
+- 🌍 **Multi-Language**: Built-in German and English support
+- 🔌 **Third-Party Integrations**: Support for Fibbl and other platforms
+
+## Quick Start
+
+### 1. Include the Script
+
+Add the mySHOEFITTER script to your website:
+
 ```html
-<!-- Load the Script -->
-<script src="https://js.myshoefitter.com/v1/script.js"></script>
-
-<!-- Initialize the Script -->
-<script type="application/javascript">
-  myshoefitter.init({
-    shopSystem: 'oxid', // shopify, woocommerce, dc, magento
-    // Optional
-    button: {
-      attachTo: '.product-form__submit',
-      position: 'before'
-    }
-  });
-</script>
+<script src="https://cdn.myshoefitter.com/v1/script.js"></script>
 ```
 
-### Extended Integration
-If you need special customizations, or your shopsystem is not supported yet, please use the following implementation:
-```html
-<!-- Load the Script -->
-<script src="https://js.myshoefitter.com/v1/script.js"></script>
+### 2. Initialize
 
-<!-- Initialize the Script -->
-<script type="application/javascript">
-  myshoefitter.init({
-    productId: 'custom-product-id', // <- replace with the sku of your product
-    enabledProductIds: [], // optional: array of product ids where mySHOEFITTER should be enabled
-    disabledProductIds: [], // optional: array of product ids where mySHOEFITTER should be disabled
-    // optional: add styles to make the button match perfectly with your ci
-    button: {
-      text: 'Find Shoe Size',
-      styles: {
-        border: '2px solid black',
-        borderRadius: '10px'
-      },
-      // Set custom attributes
-      attributes: {
-        'class': 'custom-shoefitter-class'
-      }
-    };
-  });
-</script>
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify' // or 'woocommerce', 'magento', etc.
+});
 ```
 
-Add the button to open mySHOEFITTER where it fits your website the best:
-```html
-<button id="myshoefitter-button">Find the right size</button>
+That's it! The SDK will automatically detect your products and add size finder buttons.
+
+## Configuration Options
+
+### Basic Configuration
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',           // Shop platform type
+  productId: '12345',              // Override auto-detected product ID
+  logsEnabled: true                // Enable console logging
+});
 ```
 
-### Filters
+### Product Filtering
 
-The MyShoefitter script provides flexible filtering capabilities that allow you to control exactly which products display the size recommendation button. You can filter products by their ID, their name, or a combination of both methods.
-These filtering options give you precise control over where the size recommendation feature appears in your store, ensuring it's only shown on relevant products such as footwear while being hidden on inappropriate items like accessories or clothing.
-The script supports four filtering parameters that can be used independently or in combination:
+Control which products show the size finder button:
 
-`enabledProductIds`: Show the button ONLY on specific product IDs  
-`disabledProductIds`: Hide the button on specific product IDs  
-`enabledProductNames`: Show the button ONLY on products with specific names/titles  
-`disabledProductNames`: Hide the button on products with specific names/titles
-
-When multiple filters are used together, a product must pass ALL active filter conditions for the button to be displayed.
-
-**Examples**
-
-```js
-// Only show button on products with "Running Shoes" in the title
+```javascript
 myshoefitter.init({
   shopSystem: 'shopify',
-  enabledProductNames: ['Running Shoes']
-});
-
-// Or hide button on products containing "Sandals" or "Flip Flops" in the title
-myshoefitter.init({
-  shopSystem: 'woocommerce',
-  disabledProductNames: ['Sandals', 'Flip Flops']
-});
-
-// Use regex pattern to match specific formats
-myshoefitter.init({
-  shopSystem: 'magento',
-  disabledProductNames: ['/Kids\s+Shoes/i', '/Size\s+\d+/']
-});
-
-// If you want to enable mySHOEFITTER only on specific products
-// On all other products mySHOEFITTER will bee disabled
-myshoefitter.init({
-  shopSystem: 'magento',
-  enabledProductIds: ['abc123', 'def456']
-});
-
-// If you want to disable mySHOEFITTER only on specific products
-// On all other products mySHOEFITTER will bee enabled
-myshoefitter.init({
-  shopSystem: 'magento',
-  disabledProductIds: ['abc123', 'def456']
+  
+  // Show button only for specific product IDs
+  enabledProductIds: ['12345', '67890'],
+  
+  // Hide button for specific product IDs
+  disabledProductIds: ['11111', '22222'],
+  
+  // Show button only for products matching these patterns
+  enabledProductNames: [
+    'dance shoes',     // Contains "dance shoes"
+    '/sneaker/i',      // Regex: contains "sneaker" (case-insensitive)
+    'size guide'       // Contains "size guide"
+  ],
+  
+  // Hide button for products matching these patterns
+  disabledProductNames: [
+    'sample',          // Contains "sample"
+    '/test|demo/i'     // Regex: contains "test" or "demo"
+  ]
 });
 ```
 
-### Events
+### Button Customization
 
-Events are our way of letting you know when something interesting happens in our web app. When an interesting event occurs, we create a new event object. For example, when a user clicks through the web app or a shoe size was determined.
+Fully customize the appearance and behavior of the size finder button:
 
-```html
-<!-- Load the mySHOEFITTER Script -->
-<script src="https://js.myshoefitter.com/v1/script.js"></script>
- 
-<script type="application/javascript">
- 
-  // Subscribe to Events
-  myshoefitter.events(event => {
-    console.log('mySHOEFITTER Event', event);
-    if (event.type === 'RESULT') {
-      // Work with the result - e.g. preselect size in shop
-      console.log('mySHOEFITTER Shoe Size', event.data.result);
-    }
-
-    if (event.type === 'BUTTON' && event.data && event.data.action === 'click') {
-      // Send click event to google tag manager
-      if (typeof gtag === 'function') {
-        gtag('event', 'click', {
-          event_category: 'mySHOEFITTER', // Group or category for the event
-          event_label: 'mySHOEFITTER Button', // Label to identify the event
-          value: 1 // Optional numeric value associated with the event
-        });
-        console.log('mySHOEFITTER button click event sent to Google Analytics.');
-      } else {
-        console.error('gtag function is not defined.');
-      }
-      // Log the event to the console (for debugging purposes)
-      console.log('Shopify button click event sent to Google Analytics.');
-    }
-  });
- 
-  // Initiate mySHOEFITTER like usual
-  myshoefitter.init({
-    productId: 'your-product-id' // <- Replace
-  });
-</script>
-```
-
-### Integrations
-
-**Fibbl**
-
-Fibbl is revolutionizing the customer experience with interactive 3D technology tailored for fashion brands on e-commerce platforms. mySHOEFITTER can be integrated in the current Fibbl experience like this:
-
-```js
+```javascript
 myshoefitter.init({
   shopSystem: 'shopify',
+  button: {
+    // Where to attach the button (CSS selector)
+    attachTo: '.product-form__buttons',
+    
+    // Position relative to the target element
+    position: 'after', // 'before' or 'after'
+    
+    // Custom button text
+    text: 'FIND YOUR PERFECT FIT',
+    
+    // Custom CSS styles
+    styles: {
+      backgroundColor: '#ff6b35',
+      color: 'white',
+      borderRadius: '12px',
+      fontSize: '16px',
+      fontWeight: 'bold',
+      padding: '15px 30px',
+      border: 'none',
+      cursor: 'pointer'
+    },
+    
+    // Custom HTML attributes
+    attributes: {
+      'data-track': 'size-finder',
+      'aria-label': 'Find your shoe size'
+    },
+    
+    // Logo configuration
+    logo: {
+      url: 'https://yourstore.com/logo.png',
+      position: 'left',    // 'left' or 'right'
+      width: '24px',       // CSS width
+      height: '24px',      // CSS height
+      space: '0.5em'       // Spacing (px, em, %, rem, etc.)
+    }
+  }
+});
+```
+
+### Logo Configuration
+
+The SDK supports flexible logo configuration within the button:
+
+#### Default Logo (Automatic)
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',
+  button: {
+    text: 'Find Your Size'
+    // Default mySHOEFITTER logo will appear on the right
+  }
+});
+```
+
+#### Custom Logo
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',
+  button: {
+    text: 'FIND YOUR PERFECT FIT',
+    logo: {
+      url: 'https://yourstore.com/logo.png',
+      position: 'left',           // Position relative to text
+      width: '28px',              // Logo width
+      height: '28px',             // Logo height
+      space: '12px'               // Spacing between logo and text
+    }
+  }
+});
+```
+
+#### Responsive Logo Spacing
+
+Use CSS units for responsive spacing:
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',
+  button: {
+    logo: {
+      position: 'left',
+      space: '0.75em'    // Scales with font size
+    }
+  }
+});
+
+// Other responsive units:
+// space: '1rem'      // Relative to root font size
+// space: '2%'        // Relative to container width
+// space: '1ch'       // Character width
+```
+
+#### Disable Logo
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',
+  button: {
+    text: 'Find Your Size',
+    logo: false  // No logo will be shown
+  }
+});
+```
+
+### Advanced Configuration
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',
+  bannerOrigin: 'custom.myshoefitter.com',  // Custom domain
+  
+  // Integration with third-party services
   integrations: [
     {
       fibbl: {
-        active: true
+        active: true,
+        mobileBreakpoint: 768
       }
     }
   ]
 });
 ```
 
-### Plugins
+## Supported Shop Systems
 
-For the easiest integration experience, we offer official plugins for major e-commerce platforms including:
-- [WooCommerce](https://github.com/myshoefitter/wordpress-plugin)
-- [Shopware 6](https://github.com/myshoefitter/shopware-plugin/tree/main/MyShoeFitter)
-- [Shopware 5](https://github.com/myshoefitter/shopware-plugin/tree/main/MyShoeFitter_SW5)
+The SDK automatically detects product information for these platforms:
 
----
+- **Shopify** - `shopSystem: 'shopify'`
+- **WooCommerce** - `shopSystem: 'woocommerce'`
+- **Magento** - `shopSystem: 'magento'`
+- **Shopware** - `shopSystem: 'shopware'`
+- **OXID eShop** - `shopSystem: 'oxid'`
+- **Custom/Other** - `shopSystem: 'custom'`
 
-**🚀 Get mySHOEFITTER for your Shop: [https://en.myshoefitter.com/kontakt](https://en.myshoefitter.com/kontakt)**  
-**📖 Read the Documentation at [https://docs.myshoefitter.com](https://docs.myshoefitter.com)**
+### Manual Product ID Setup
+
+If automatic detection doesn't work or for custom platforms:
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'custom',
+  productId: 'your-product-id',
+  button: {
+    attachTo: '.add-to-cart-button'
+  }
+});
+```
+
+## Platform-Specific Examples
+
+### Shopify
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',
+  button: {
+    text: 'Find My Perfect Size',
+    position: 'before',
+    logo: {
+      url: 'https://yourstore.myshopify.com/files/logo.png',
+      position: 'left',
+      space: '10px'
+    }
+  }
+});
+```
+
+### WooCommerce
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'woocommerce',
+  button: {
+    attachTo: '.single_add_to_cart_button',
+    styles: {
+      marginTop: '10px',
+      width: '100%'
+    }
+  }
+});
+```
+
+### Custom Implementation
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'custom',
+  productId: document.querySelector('[data-product-id]').dataset.productId,
+  button: {
+    attachTo: '.product-actions',
+    text: 'Check My Size',
+    logo: {
+      url: '/assets/size-guide-icon.svg',
+      position: 'right',
+      width: '20px',
+      height: '20px',
+      space: '8px'
+    }
+  }
+});
+```
+
+## Event Handling
+
+Listen to events from the mySHOEFITTER widget:
+
+```javascript
+myshoefitter.events((event) => {
+  switch (event.type) {
+    case 'INIT':
+      console.log('mySHOEFITTER initialized:', event.data);
+      break;
+      
+    case 'BUTTON':
+      console.log('Size finder button clicked:', event.data);
+      // Track in your analytics
+      gtag('event', 'size_finder_click', {
+        product_id: event.data.productId
+      });
+      break;
+      
+    case 'RESULT':
+      console.log('Size recommendation received:', event.data);
+      // Auto-select the recommended size
+      selectProductVariant(event.data.recommendedSize);
+      break;
+      
+    case 'BANNER':
+      if (event.data.action === 'close') {
+        console.log('Size finder modal closed');
+      }
+      break;
+  }
+});
+```
+
+## API Reference
+
+### Methods
+
+#### `myshoefitter.init(config)`
+
+Initialize the SDK with the given configuration.
+
+**Parameters:**
+- `config` (Object) - Configuration options
+
+#### `myshoefitter.showBanner()`
+
+Manually open the size finder interface.
+
+#### `myshoefitter.closeBanner()`
+
+Close the size finder interface.
+
+#### `myshoefitter.getLink(options?)`
+
+Generate a direct link to the size finder.
+
+**Parameters:**
+- `options.clientType` (String) - `'mobile'` or `'desktop'`
+
+**Returns:** String - The size finder URL
+
+```javascript
+const sizeFinderUrl = myshoefitter.getLink({ clientType: 'mobile' });
+```
+
+#### `myshoefitter.events(callback)`
+
+Register an event listener.
+
+**Parameters:**
+- `callback` (Function) - Event handler function
+
+#### `myshoefitter.destroy()`
+
+Clean up the SDK instance and remove event listeners.
+
+### Configuration Schema
+
+```typescript
+interface ScriptConfig {
+  shopSystem?: string;
+  productId?: string | number;
+  enabledProductIds?: (string | number)[];
+  disabledProductIds?: (string | number)[];
+  enabledProductNames?: (string | RegExp)[];
+  disabledProductNames?: (string | RegExp)[];
+  logsEnabled?: boolean;
+  bannerOrigin?: string;
+  integrations?: IntegrationItem[];
+  button?: {
+    attachTo?: string;
+    position?: 'before' | 'after';
+    text?: string;
+    styles?: Partial<CSSStyleDeclaration>;
+    attributes?: Record<string, string>;
+    logo?: LogoConfig | false;
+  };
+}
+
+interface LogoConfig {
+  url?: string;
+  position?: 'left' | 'right';
+  width?: string | number;
+  height?: string | number;
+  space?: string | number;
+}
+```
+
+## Troubleshooting
+
+### Button Not Appearing
+
+1. **Check product detection:**
+   ```javascript
+   myshoefitter.init({
+     shopSystem: 'shopify',
+     logsEnabled: true  // Enable logging to see detection results
+   });
+   ```
+
+2. **Manual product ID:**
+   ```javascript
+   myshoefitter.init({
+     shopSystem: 'shopify',
+     productId: 'manual-product-id'
+   });
+   ```
+
+3. **Check button selector:**
+   ```javascript
+   myshoefitter.init({
+     shopSystem: 'shopify',
+     button: {
+       attachTo: '.your-specific-selector'  // Use your site's selector
+     }
+   });
+   ```
+
+### Logo Not Showing
+
+Ensure the logo configuration is inside the `button` object:
+
+```javascript
+// ✅ Correct
+myshoefitter.init({
+  shopSystem: 'shopify',
+  button: {
+    logo: {
+      url: 'https://example.com/logo.png'
+    }
+  }
+});
+
+// ❌ Incorrect
+myshoefitter.init({
+  shopSystem: 'shopify',
+  logo: {  // This won't work
+    url: 'https://example.com/logo.png'
+  }
+});
+```
+
+### Product Filtering Issues
+
+Check your filtering patterns:
+
+```javascript
+myshoefitter.init({
+  shopSystem: 'shopify',
+  logsEnabled: true,  // See filter results in console
+  enabledProductNames: [
+    'shoe',           // Simple text match
+    '/sneaker/i'      // Regex with flags
+  ]
+});
+```
+
+## Support
+
+For technical support or questions:
+
+- 📧 Email: support@myshoefitter.com
+- 📖 Documentation: https://docs.myshoefitter.com
+- 🐛 Issues: https://github.com/myshoefitter/sdk/issues
+
+## License
+
+© 2025 mySHOEFITTER. All rights reserved.
