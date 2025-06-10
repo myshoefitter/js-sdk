@@ -602,9 +602,9 @@ class MyShoefitter {
   private getButtonText(): string {
     const language = navigator.language;
     if (language.startsWith('de')) {
-      return `1 Foto - immer die perfekte Größe <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 17px; margin: 0 0 0 10px;" />`;
+      return `1 Foto - immer die perfekte Größe`;
     } else {
-      return `1 Photo - always the perfect fit <img src="https://cdn.myshoefitter.com/images/logo.png" style="height: 17px; margin: 0 0 0 10px;" />`;
+      return `1 Photo - always the perfect fit`;
     }
   }
 
