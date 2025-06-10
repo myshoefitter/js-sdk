@@ -614,8 +614,8 @@ class MyShoefitter {
  */
   private getButtonContent(): string {
     const extendedConfig = getConfig() as any;
-    const logoConfig = extendedConfig.config?.logo;
     const buttonConfig = extendedConfig.config?.button;
+    const logoConfig = buttonConfig?.logo; // Look for logo inside button config
 
     const text = buttonConfig?.text || this.getButtonText();
 

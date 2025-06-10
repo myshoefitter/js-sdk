@@ -17,13 +17,13 @@ export interface ScriptConfig {
   shopSystem?: string;
   bannerOrigin?: string; // Override the default banner url
   integrations?: IntegrationItem[];
-  logo?: LogoConfig | false; // Logo configuration or false to disable
   button?: {
     attachTo: string;
     position?: ButtonPosition;
     text?: string;
     styles?: Partial<CSSStyleDeclaration>;
     attributes?: Record<string, string>;
+    logo?: LogoConfig | false; // Logo configuration or false to disable
   }
 }
 
