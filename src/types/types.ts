@@ -11,6 +11,8 @@ export interface ScriptConfig {
   productId?: string | number; // Override the automatically found product id
   enabledProductIds?: (string | number)[]; // Product Ids where button should show
   disabledProductIds?: (string | number)[]; // Product Ids where button should be hidden
+  enabledProductNames?: (string | RegExp)[];
+  disabledProductNames?: (string | RegExp)[];
   logsEnabled?: boolean;
   shopSystem?: string;
   bannerOrigin?: string; // Override the default banner url

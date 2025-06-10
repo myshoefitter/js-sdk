@@ -318,18 +318,118 @@ class MyShoefitter {
   }
 
   /**
+   * Get the current product name/title from document title
+   * @returns string | null
+   */
+  private getProductName(): string | null {
+    if (document.title) {
+      return document.title.trim();
+    }
+    return null;
+  }
+
+  /**
+   * Check if a value matches a pattern (string or regex)
+   * @param value The value to check
+   * @param pattern The pattern to match against
+   * @returns boolean
+   */
+  private matchesPattern(value: string, pattern: string | RegExp): boolean {
+    if (typeof pattern === 'string') {
+      // Check if the pattern looks like a regex (starts and ends with /)
+      if (pattern.startsWith('/') && pattern.lastIndexOf('/') > 0) {
+        // Extract regex pattern and flags
+        const lastSlashIndex = pattern.lastIndexOf('/');
+        const regexPattern = pattern.slice(1, lastSlashIndex);
+        const flags = pattern.slice(lastSlashIndex + 1);
+        try {
+          const regex = new RegExp(regexPattern, flags);
+          return regex.test(value);
+        } catch (e) {
+          // If regex is invalid, fall back to string contains
+          return value.toLowerCase().includes(pattern.toLowerCase());
+        }
+      } else {
+        // Simple string contains check (case-insensitive)
+        return value.toLowerCase().includes(pattern.toLowerCase());
+      }
+    } else if (pattern instanceof RegExp) {
+      return pattern.test(value);
+    }
+    return false;
+  }
+
+  /**
+   * Check if the button should be shown based on filter configuration
+   * @returns boolean
+   */
+  private shouldShowButton(): boolean {
+    const currentConfig = getConfig().config as ScriptConfig;
+    const productId = currentConfig.productId;
+    const productName = this.getProductName();
+
+    // If no productId, we can't show the button
+    if (!productId) {
+      return false;
+    }
+
+    // Check enabledProductIds filter
+    if (currentConfig.enabledProductIds?.length) {
+      if (!currentConfig.enabledProductIds.includes(String(productId))) {
+        console.log(`mySHOEFITTER: Button hidden - Product ID ${productId} not in enabled list`);
+        return false;
+      }
+    }
+
+    // Check disabledProductIds filter
+    if (currentConfig.disabledProductIds?.length) {
+      if (currentConfig.disabledProductIds.includes(String(productId))) {
+        console.log(`mySHOEFITTER: Button hidden - Product ID ${productId} is in disabled list`);
+        return false;
+      }
+    }
+
+    // Check product name filters only if we have a product name
+    if (productName) {
+      // Check enabledProductNames filter
+      if (currentConfig.enabledProductNames?.length) {
+        const matchesEnabled = currentConfig.enabledProductNames.some(pattern => 
+          this.matchesPattern(productName, pattern)
+        );
+        if (!matchesEnabled) {
+          console.log(`mySHOEFITTER: Button hidden - Product name "${productName}" doesn't match enabled patterns`);
+          return false;
+        }
+      }
+
+      // Check disabledProductNames filter
+      if (currentConfig.disabledProductNames?.length) {
+        const matchesDisabled = currentConfig.disabledProductNames.some(pattern => 
+          this.matchesPattern(productName, pattern)
+        );
+        if (matchesDisabled) {
+          console.log(`mySHOEFITTER: Button hidden - Product name "${productName}" matches disabled patterns`);
+          return false;
+        }
+      }
+    }
+
+    // All filters passed, show the button
+    return true;
+  }
+
+  /**
    * Find the button in html and add click listener
    */
   private addButton(): void {
-    const currentConfig = getConfig().config;
+    const currentConfig = getConfig().config as ScriptConfig;
 
     if (!currentConfig.productId) {
       return;
     }
 
-    // Only show button on enabled products
-    if (currentConfig.enabledProductIds?.length && !currentConfig.enabledProductIds?.includes(String(currentConfig.productId))) {
-      console.log('mySHOEFITTER: Button hidden on Product', currentConfig.productId);
+    // Check if button should be shown based on filters
+    if (!this.shouldShowButton()) {
       return;
     }
 
