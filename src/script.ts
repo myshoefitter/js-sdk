@@ -617,7 +617,7 @@ class MyShoefitter {
     const buttonConfig = extendedConfig.config?.button;
     const logoConfig = buttonConfig?.logo; // Look for logo inside button config
 
-    const text = buttonConfig?.text || this.getButtonText();
+    const text = this.getButtonText();
 
     // Handle logo: false case (explicitly disabled)
     if (logoConfig === false) {
