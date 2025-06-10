@@ -17,14 +17,16 @@ export interface ScriptConfig {
   shopSystem?: string;
   bannerOrigin?: string; // Override the default banner url
   integrations?: IntegrationItem[];
-  button?: {
-    attachTo: string;
-    position?: ButtonPosition;
-    text?: string;
-    styles?: Partial<CSSStyleDeclaration>;
-    attributes?: Record<string, string>;
-    logo?: LogoConfig | false; // Logo configuration or false to disable
-  }
+  button?: ButtonConfig; // Configuration for the button
+}
+
+export interface ButtonConfig {
+  attachTo: string; // CSS selector to attach the button
+  position?: ButtonPosition; // Position relative to the element
+  text?: string; // Button text
+  styles?: Partial<CSSStyleDeclaration>; // Custom styles for the button
+  attributes?: Record<string, string>; // Additional attributes for the button element
+  logo?: LogoConfig | false; // Logo configuration or false to disable
 }
 
 export interface LogoConfig {
