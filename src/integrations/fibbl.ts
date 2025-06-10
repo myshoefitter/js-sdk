@@ -102,7 +102,16 @@ export default class FibblCustomizer implements Integration {
     };
 
     const setupListeners = (fibblLayer: HTMLElement): void => {
+      // Check if we've already set up listeners on this layer
+      if (fibblLayer.hasAttribute('data-myshoefitter-initialized')) {
+        console.log('Listeners already set up on fibbl-layer, skipping');
+        return;
+      }
+
       console.log('Setting up button listeners on fibbl-layer');
+
+      // Mark this layer as initialized
+      fibblLayer.setAttribute('data-myshoefitter-initialized', 'true');
 
       // Find all buttons in the layer
       const buttons = Array.from(fibblLayer.querySelectorAll('button'));
@@ -150,6 +159,15 @@ export default class FibblCustomizer implements Integration {
    * Add custom size button to the fibbl-layer
    */
   private addSizeButton(fibblLayer: HTMLElement, existingButtons: HTMLButtonElement[]): void {
+    // Check if our custom button already exists
+    const existingSizeButton = fibblLayer.querySelector('button[data-size-button="true"]');
+    if (existingSizeButton) {
+      console.log('Size button already exists, skipping creation');
+      // Update behavior of existing button in case screen size changed
+      this.updateButtonBehavior(existingSizeButton as HTMLButtonElement);
+      return;
+    }
+
     const referenceButton = existingButtons.find(btn =>
       !btn.classList.contains('fibbl-active')
     );
