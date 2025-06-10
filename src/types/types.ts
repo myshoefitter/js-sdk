@@ -17,6 +17,7 @@ export interface ScriptConfig {
   shopSystem?: string;
   bannerOrigin?: string; // Override the default banner url
   integrations?: IntegrationItem[];
+  logo?: LogoConfig | false; // Logo configuration or false to disable
   button?: {
     attachTo: string;
     position?: ButtonPosition;
@@ -24,6 +25,14 @@ export interface ScriptConfig {
     styles?: Partial<CSSStyleDeclaration>;
     attributes?: Record<string, string>;
   }
+}
+
+export interface LogoConfig {
+  url?: string; // Logo image URL
+  position?: 'left' | 'right'; // Position relative to text
+  width?: string | number; // Logo width (px or css unit)
+  height?: string | number; // Logo height (px or css unit)
+  space?: string | number; // Spacing between logo and text (px, em, %, etc.)
 }
 
 export interface BannerParams {

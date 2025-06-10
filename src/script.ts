@@ -1,7 +1,7 @@
 import { dc, magento, shopify, woocommerce, oxid, shopware } from './shop-adapters/index';
 // Import all integrations directly
 import FibblCustomizer from './integrations/fibbl';
-import { BannerParams, ButtonPosition, CustomEvent, EventTypes, Integration, IntegrationItem, IntegrationOptions, LinkOptions, myShoeFitter, ScriptConfig, ShopSystemConfig } from './types/types';
+import { BannerParams, ButtonPosition, CustomEvent, EventTypes, Integration, IntegrationItem, IntegrationOptions, LinkOptions, LogoConfig, myShoeFitter, ScriptConfig, ShopSystemConfig } from './types/types';
 import { detectClient, generateAppLink, getHostname } from './utils/helpers';
 import { getConfig, updateConfig, getBannerParams } from './utils/config';
 
@@ -87,20 +87,20 @@ class MyShoefitter {
       // Process each integration item
       (currentConfig.integrations as IntegrationItem[]).forEach((integrationItem: IntegrationItem) => {
         const integrationEntries = Object.entries(integrationItem);
-        
+
         if (integrationEntries.length === 0) {
           console.warn('mySHOEFITTER: Empty integration object found.');
           return;
         }
-        
+
         const [integrationName, integrationOptions] = integrationEntries[0];
-        
+
         // Skip if the integration is explicitly set to inactive
         if (!integrationOptions.active) {
           console.log(`mySHOEFITTER: Integration "${integrationName}" is disabled.`);
           return;
         }
-        
+
         // Check if the integration is registered
         const IntegrationClass = this.integrationRegistry[integrationName];
         if (IntegrationClass) {
@@ -186,7 +186,7 @@ class MyShoefitter {
   public events(callback: (event: CustomEvent) => void) {
     this.callback = callback;
   }
-  
+
   /**
    * Public method to destroy and clean up the MyShoefitter instance
    * Call this when the script is no longer needed
@@ -194,15 +194,15 @@ class MyShoefitter {
   public destroy(): void {
     // Clean up integrations
     this.destroyIntegrations();
-    
+
     // Remove event listeners
     window.removeEventListener('message', (event) => this.handleMessage(event));
-    
+
     // Close any open dialog
     if (this.dialog && this.dialog.open) {
       this.dialog.close();
     }
-    
+
     console.log('mySHOEFITTER: Instance destroyed');
   }
 
@@ -393,7 +393,7 @@ class MyShoefitter {
     if (productName) {
       // Check enabledProductNames filter
       if (currentConfig.enabledProductNames?.length) {
-        const matchesEnabled = currentConfig.enabledProductNames.some(pattern => 
+        const matchesEnabled = currentConfig.enabledProductNames.some(pattern =>
           this.matchesPattern(productName, pattern)
         );
         if (!matchesEnabled) {
@@ -404,7 +404,7 @@ class MyShoefitter {
 
       // Check disabledProductNames filter
       if (currentConfig.disabledProductNames?.length) {
-        const matchesDisabled = currentConfig.disabledProductNames.some(pattern => 
+        const matchesDisabled = currentConfig.disabledProductNames.some(pattern =>
           this.matchesPattern(productName, pattern)
         );
         if (matchesDisabled) {
@@ -609,6 +609,65 @@ class MyShoefitter {
   }
 
   /**
+ * Generates complete button content including text and logo
+ * @returns {string} The complete button HTML content
+ */
+  private getButtonContent(): string {
+    const extendedConfig = getConfig() as any;
+    const logoConfig = extendedConfig.config?.logo;
+    const buttonConfig = extendedConfig.config?.button;
+
+    const text = buttonConfig?.text || this.getButtonText();
+
+    // Handle logo: false case (explicitly disabled)
+    if (logoConfig === false) {
+      return text;
+    }
+
+    // Default logo configuration
+    const defaultLogo: LogoConfig = {
+      url: 'https://cdn.myshoefitter.com/images/logo.png',
+      position: 'right',
+      width: undefined,
+      height: '17px',
+      space: 10
+    };
+
+    // Merge with user config or use default
+    const logo = logoConfig ? { ...defaultLogo, ...logoConfig } : defaultLogo;
+
+    // Generate logo styles
+    const logoStyles: string[] = [];
+
+    if (logo.width) {
+      logoStyles.push(`width: ${typeof logo.width === 'number' ? logo.width + 'px' : logo.width}`);
+    }
+
+    if (logo.height) {
+      logoStyles.push(`height: ${typeof logo.height === 'number' ? logo.height + 'px' : logo.height}`);
+    }
+
+    // Add margin based on position - handle both number and string values for space
+    const spaceValue = logo.space || 10;
+    const spaceString = typeof spaceValue === 'number' ? `${spaceValue}px` : spaceValue;
+
+    if (logo.position === 'left') {
+      logoStyles.push(`margin-right: ${spaceString}`);
+    } else {
+      logoStyles.push(`margin-left: ${spaceString}`);
+    }
+
+    const logoHtml = `<img src="${logo.url}" style="${logoStyles.join('; ')}" alt="mySHOEFITTER logo" />`;
+
+    // Position logo relative to text
+    if (logo.position === 'left') {
+      return `${logoHtml}${text}`;
+    } else {
+      return `${text}${logoHtml}`;
+    }
+  }
+
+  /**
    * Automatically injects the myshoefitter button into the dom
    *
    * @param attachTo css selector of the element the button will be attached to
@@ -634,7 +693,7 @@ class MyShoefitter {
       const extendedConfig = getConfig() as any;
       const buttonConfig = extendedConfig.config?.button;
 
-      mysfButton.innerHTML = buttonConfig?.text || this.getButtonText(); // Set the button text
+      mysfButton.innerHTML = buttonConfig?.text || this.getButtonContent(); // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
       // Add custom attributes
