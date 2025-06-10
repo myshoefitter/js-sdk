@@ -41,7 +41,7 @@ If you need special customizations, or your shopsystem is not supported yet, ple
       text: 'Find Shoe Size',
       styles: {
         border: '2px solid black',
-        boederRadius: '10px'
+        borderRadius: '10px'
       },
       // Set custom attributes
       attributes: {
