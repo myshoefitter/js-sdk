@@ -693,7 +693,7 @@ class MyShoefitter {
       const extendedConfig = getConfig() as any;
       const buttonConfig = extendedConfig.config?.button;
 
-      mysfButton.innerHTML = buttonConfig?.text || this.getButtonContent(); // Set the button text
+      mysfButton.innerHTML = this.getButtonContent(); // Set the button text
       mysfButton.type = 'button'; // Set the button type
 
       // Add custom attributes
