@@ -126,6 +126,15 @@ function extractFromHiddenInput(): string | null {
       }
     }
     
+    // Look for the product-id input
+    const productIdInput = document.querySelector('input[name="product-id"]') as HTMLInputElement;
+    if (productIdInput && productIdInput.value) {
+      const productId = productIdInput.value.trim();
+      if (isValidProductId(productId)) {
+        return productId;
+      }
+    }
+    
     return null;
   } catch (error) {
     console.error("Error extracting from hidden input:", error);
@@ -155,42 +164,39 @@ function extractFromArticleNumber(): string | null {
 }
 
 /**
- * Extracts product ID from product detail buy containers
+ * Extracts product ID from the product detail buy container
  */
 function extractFromProductDetailBuy(): string | null {
   try {
-    // Try both selectors: .product-detail-buy and elements with data-cms-element-id
-    const selectors = ['.product-detail-buy', '[data-cms-element-id]'];
+    const productDetailBuy = document.querySelector('.col-lg-5.product-detail-buy[data-cms-element-id="e5346f406de8456590d412dfef26f517"]');
     
-    for (const selector of selectors) {
-      const elements = document.querySelectorAll(selector);
-      
-      for (const element of elements) {
-        // Check for data attributes that might contain product ID
-        const dataProductId = element.getAttribute('data-product-id');
-        if (dataProductId && isValidProductId(dataProductId)) {
-          return dataProductId;
-        }
+    if (!productDetailBuy) {
+      return null;
+    }
 
-        const dataSku = element.getAttribute('data-sku');
-        if (dataSku && isValidProductId(dataSku)) {
-          return dataSku;
-        }
+    // Check for data attributes that might contain product ID
+    const dataProductId = productDetailBuy.getAttribute('data-product-id');
+    if (dataProductId && isValidProductId(dataProductId)) {
+      return dataProductId;
+    }
 
-        // Look for input fields within this container
-        const productInput = element.querySelector('input[name="sAdd"], input[data-product-id]') as HTMLInputElement;
-        if (productInput && productInput.value && isValidProductId(productInput.value)) {
-          return productInput.value.trim();
-        }
+    const dataSku = productDetailBuy.getAttribute('data-sku');
+    if (dataSku && isValidProductId(dataSku)) {
+      return dataSku;
+    }
 
-        // Look for any element with product ID in data attributes within this container
-        const elementWithProductId = element.querySelector('[data-product-id], [data-sku]');
-        if (elementWithProductId) {
-          const productId = elementWithProductId.getAttribute('data-product-id') || elementWithProductId.getAttribute('data-sku');
-          if (productId && isValidProductId(productId)) {
-            return productId;
-          }
-        }
+    // Look for input fields within this container
+    const productInput = productDetailBuy.querySelector('input[name="sAdd"], input[data-product-id]') as HTMLInputElement;
+    if (productInput && productInput.value && isValidProductId(productInput.value)) {
+      return productInput.value.trim();
+    }
+
+    // Look for any element with product ID in data attributes within this container
+    const elementWithProductId = productDetailBuy.querySelector('[data-product-id], [data-sku]');
+    if (elementWithProductId) {
+      const productId = elementWithProductId.getAttribute('data-product-id') || elementWithProductId.getAttribute('data-sku');
+      if (productId && isValidProductId(productId)) {
+        return productId;
       }
     }
 
