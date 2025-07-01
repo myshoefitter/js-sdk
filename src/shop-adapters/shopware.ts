@@ -17,6 +17,7 @@ export function findProductId(): string | null {
       extractFromGoogleTagManager() ||
       extractFromHiddenInput() ||
       extractFromArticleNumber() ||
+      extractFromProductDetailBuy() ||
       null
     );
   } catch (error) {
@@ -149,6 +150,53 @@ function extractFromArticleNumber(): string | null {
     return null;
   } catch (error) {
     console.error("Error extracting from article number:", error);
+    return null;
+  }
+}
+
+/**
+ * Extracts product ID from product detail buy containers
+ */
+function extractFromProductDetailBuy(): string | null {
+  try {
+    // Try both selectors: .product-detail-buy and elements with data-cms-element-id
+    const selectors = ['.product-detail-buy', '[data-cms-element-id]'];
+    
+    for (const selector of selectors) {
+      const elements = document.querySelectorAll(selector);
+      
+      for (const element of elements) {
+        // Check for data attributes that might contain product ID
+        const dataProductId = element.getAttribute('data-product-id');
+        if (dataProductId && isValidProductId(dataProductId)) {
+          return dataProductId;
+        }
+
+        const dataSku = element.getAttribute('data-sku');
+        if (dataSku && isValidProductId(dataSku)) {
+          return dataSku;
+        }
+
+        // Look for input fields within this container
+        const productInput = element.querySelector('input[name="sAdd"], input[data-product-id]') as HTMLInputElement;
+        if (productInput && productInput.value && isValidProductId(productInput.value)) {
+          return productInput.value.trim();
+        }
+
+        // Look for any element with product ID in data attributes within this container
+        const elementWithProductId = element.querySelector('[data-product-id], [data-sku]');
+        if (elementWithProductId) {
+          const productId = elementWithProductId.getAttribute('data-product-id') || elementWithProductId.getAttribute('data-sku');
+          if (productId && isValidProductId(productId)) {
+            return productId;
+          }
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error extracting from product detail buy container:", error);
     return null;
   }
 }
