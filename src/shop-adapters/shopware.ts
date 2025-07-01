@@ -16,8 +16,8 @@ export function findProductId(): string | null {
       extractFromDataLayer() ||
       extractFromGoogleTagManager() ||
       extractFromHiddenInput() ||
+      extractFromProductIdInput() ||
       extractFromArticleNumber() ||
-      extractFromProductDetailBuy() ||
       null
     );
   } catch (error) {
@@ -113,7 +113,7 @@ function extractFromGoogleTagManager(): string | null {
 }
 
 /**
- * Extracts product ID from hidden input field
+ * Extracts product ID from hidden input field with name="sAdd"
  */
 function extractFromHiddenInput(): string | null {
   try {
@@ -126,7 +126,19 @@ function extractFromHiddenInput(): string | null {
       }
     }
     
-    // Look for the product-id input
+    return null;
+  } catch (error) {
+    console.error("Error extracting from hidden input:", error);
+    return null;
+  }
+}
+
+/**
+ * Extracts product ID from hidden input field with name="product-id"
+ */
+function extractFromProductIdInput(): string | null {
+  try {
+    // Look for the product-id input field
     const productIdInput = document.querySelector('input[name="product-id"]') as HTMLInputElement;
     if (productIdInput && productIdInput.value) {
       const productId = productIdInput.value.trim();
@@ -137,7 +149,7 @@ function extractFromHiddenInput(): string | null {
     
     return null;
   } catch (error) {
-    console.error("Error extracting from hidden input:", error);
+    console.error("Error extracting from product-id input:", error);
     return null;
   }
 }
@@ -159,50 +171,6 @@ function extractFromArticleNumber(): string | null {
     return null;
   } catch (error) {
     console.error("Error extracting from article number:", error);
-    return null;
-  }
-}
-
-/**
- * Extracts product ID from the product detail buy container
- */
-function extractFromProductDetailBuy(): string | null {
-  try {
-    const productDetailBuy = document.querySelector('.col-lg-5.product-detail-buy[data-cms-element-id="e5346f406de8456590d412dfef26f517"]');
-    
-    if (!productDetailBuy) {
-      return null;
-    }
-
-    // Check for data attributes that might contain product ID
-    const dataProductId = productDetailBuy.getAttribute('data-product-id');
-    if (dataProductId && isValidProductId(dataProductId)) {
-      return dataProductId;
-    }
-
-    const dataSku = productDetailBuy.getAttribute('data-sku');
-    if (dataSku && isValidProductId(dataSku)) {
-      return dataSku;
-    }
-
-    // Look for input fields within this container
-    const productInput = productDetailBuy.querySelector('input[name="sAdd"], input[data-product-id]') as HTMLInputElement;
-    if (productInput && productInput.value && isValidProductId(productInput.value)) {
-      return productInput.value.trim();
-    }
-
-    // Look for any element with product ID in data attributes within this container
-    const elementWithProductId = productDetailBuy.querySelector('[data-product-id], [data-sku]');
-    if (elementWithProductId) {
-      const productId = elementWithProductId.getAttribute('data-product-id') || elementWithProductId.getAttribute('data-sku');
-      if (productId && isValidProductId(productId)) {
-        return productId;
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.error("Error extracting from product detail buy container:", error);
     return null;
   }
 }
