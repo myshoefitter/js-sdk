@@ -1,5 +1,5 @@
 export function getCartButtonSelector() {
-  const selectors = ['.product--configurator'];
+  const selectors = ['.product--configurator', '.product-detail-configurator-container'];
   const button = selectors.find(selector => document.querySelector(selector));
   return button as string;
 }
