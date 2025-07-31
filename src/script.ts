@@ -7,6 +7,7 @@ import { getConfig, updateConfig, getBannerParams } from './utils/config';
 
 /**
  * Represents a service with functionalities related to a product.
+ * IMPROVED VERSION: Non-blocking, head/body compatible implementation
  */
 class MyShoefitter {
   // The dialog window
@@ -25,33 +26,177 @@ class MyShoefitter {
   private activeIntegrations: Integration[] = [];
   // Callback for events
   private callback?: (event: CustomEvent) => void;
+  
+  // NEW: State management for DOM readiness
+  private domReady = false;
+  private initializeRequested = false;
+  private pendingConfig: ScriptConfig | null = null;
+  private readyCallbacks: (() => void)[] = [];
+  private domObserver: MutationObserver | null = null;
+  private retryCount = 0;
+  private readonly maxRetries = 50; // Max 5 seconds with 100ms intervals
 
   constructor() {
     // Initialize bannerOrigin from config
     this.bannerOrigin = getConfig<string>('config.bannerOrigin');
+    
+    // NEW: Setup DOM readiness detection
+    this.setupDOMReadiness();
   }
 
   /**
-   * Initialize the Script
+   * NEW: Setup DOM readiness detection for head/body placement compatibility
+   */
+  private setupDOMReadiness(): void {
+    // Check initial DOM state
+    if (document.readyState === 'loading') {
+      // DOM still loading - we're likely in <head> or early <body>
+      document.addEventListener('DOMContentLoaded', () => {
+        this.onDOMReady();
+      });
+    } else {
+      // DOM already loaded - we're at bottom of page or script loaded late
+      this.onDOMReady();
+    }
+
+    // Fallback: Use MutationObserver to detect when critical elements appear
+    if (typeof MutationObserver !== 'undefined') {
+      this.setupMutationObserver();
+    }
+  }
+
+  /**
+   * NEW: Setup MutationObserver to detect when DOM elements are available
+   */
+  private setupMutationObserver(): void {
+    this.domObserver = new MutationObserver((mutations) => {
+      // Check if we now have the elements we need
+      if (!this.domReady && this.checkCriticalElementsAvailable()) {
+        this.onDOMReady();
+      }
+    });
+
+    // Start observing when document.body is available
+    this.waitForBody(() => {
+      if (this.domObserver && document.body) {
+        this.domObserver.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+      }
+    });
+  }
+
+  /**
+   * NEW: Wait for document.body to be available
+   */
+  private waitForBody(callback: () => void): void {
+    if (document.body) {
+      callback();
+    } else {
+      // Retry with exponential backoff
+      const checkBody = () => {
+        if (document.body) {
+          callback();
+        } else if (this.retryCount < this.maxRetries) {
+          this.retryCount++;
+          setTimeout(checkBody, Math.min(100 * Math.pow(1.1, this.retryCount), 1000));
+        }
+      };
+      checkBody();
+    }
+  }
+
+  /**
+   * NEW: Check if critical DOM elements are available
+   */
+  private checkCriticalElementsAvailable(): boolean {
+    // Check if we have document.body and basic structure
+    if (!document.body) return false;
+    
+    // For shop detection, we need to check if key elements exist
+    // This is a heuristic - we don't need ALL elements, just enough to detect the shop
+    const hasBasicStructure = document.body.children.length > 0;
+    const hasMetaElements = document.head && document.head.children.length > 0;
+    
+    return hasBasicStructure && hasMetaElements;
+  }
+
+  /**
+   * NEW: Called when DOM is ready
+   */
+  private onDOMReady(): void {
+    if (this.domReady) return;
+    
+    this.domReady = true;
+    
+    // Clean up observer
+    if (this.domObserver) {
+      this.domObserver.disconnect();
+      this.domObserver = null;
+    }
+
+    // If init was called before DOM was ready, initialize now
+    if (this.initializeRequested && this.pendingConfig) {
+      this.performInitialization(this.pendingConfig);
+    }
+
+    // Execute any pending callbacks
+    this.readyCallbacks.forEach(callback => callback());
+    this.readyCallbacks = [];
+  }
+
+  /**
+   * NEW: Queue a callback to run when DOM is ready
+   */
+  private onReady(callback: () => void): void {
+    if (this.domReady) {
+      callback();
+    } else {
+      this.readyCallbacks.push(callback);
+    }
+  }
+
+  /**
+   * Initialize the Script - IMPROVED VERSION
    * @param config ScriptConfig
    */
   public init(config: ScriptConfig): void {
+    this.initializeRequested = true;
+    this.pendingConfig = config;
+
+    // Store basic config immediately (non-DOM dependent)
+    this.storeBasicConfig(config);
+
+    if (this.domReady) {
+      // DOM is ready, initialize immediately
+      this.performInitialization(config);
+    } else {
+      // DOM not ready, initialization will happen in onDOMReady
+      console.log('mySHOEFITTER: Waiting for DOM to be ready...');
+    }
+  }
+
+  /**
+   * NEW: Store basic configuration that doesn't require DOM
+   */
+  private storeBasicConfig(config: ScriptConfig): void {
     // Get the current bannerOrigin
     const currentBannerOrigin = getConfig<string>('config.bannerOrigin');
 
-    // Update the central config store
+    // Update the central config store with non-DOM dependent settings
     updateConfig({
       config: {
         ...config,
         bannerOrigin: (config.bannerOrigin || currentBannerOrigin) as string
       },
-      initialized: true
+      initialized: false // Mark as not fully initialized yet
     });
 
     // Update bannerOrigin from config
     this.bannerOrigin = getConfig<string>('config.bannerOrigin');
 
-    // On PWA V2, the hostname will be used to identify the shop
+    // Store hostname (available immediately)
     const shopId = getHostname();
     updateConfig({
       config: {
@@ -59,9 +204,19 @@ class MyShoefitter {
         bannerOrigin: getConfig<string>('config.bannerOrigin')
       }
     });
+  }
 
-    // Overwrite settings for groundies
-    if (shopId?.includes('groundies.com')) {
+  /**
+   * NEW: Perform the actual initialization when DOM is ready
+   */
+  private performInitialization(config: ScriptConfig): void {
+    // Mark as initialized
+    updateConfig({ initialized: true });
+
+    const currentConfig = getConfig().config;
+
+    // Overwrite settings for groundies (can be done early)
+    if (currentConfig.shopId?.includes('groundies.com')) {
       updateConfig({
         config: {
           shopSystem: 'oxid',
@@ -71,9 +226,7 @@ class MyShoefitter {
       });
     }
 
-    const currentConfig = getConfig().config;
-
-    // Show error if productId and shopSystem are missing - pwa will not work without these parameters
+    // Show error if productId and shopSystem are missing
     if (!currentConfig.productId && !currentConfig.shopSystem) {
       console.warn('mySHOEFITTER: Please provide either productId or shopSystem!');
     }
@@ -83,6 +236,31 @@ class MyShoefitter {
     }
 
     // Handle integrations
+    this.initializeIntegrations(currentConfig);
+
+    // Try to detect product ID with retry mechanism
+    this.detectProductIdWithRetry(currentConfig, 0);
+
+    // Get banner params from config utility
+    this.params = getBannerParams() as BannerParams;
+
+    // Add button with retry mechanism
+    this.addButtonWithRetry();
+
+    this.emit({
+      type: EventTypes.Init,
+      data: currentConfig
+    });
+
+    if (currentConfig.logsEnabled) {
+      console.log('mySHOEFITTER Config:', currentConfig);
+    }
+  }
+
+  /**
+   * NEW: Initialize integrations
+   */
+  private initializeIntegrations(currentConfig: any): void {
     if (currentConfig?.integrations?.length) {
       // Process each integration item
       (currentConfig.integrations as IntegrationItem[]).forEach((integrationItem: IntegrationItem) => {
@@ -120,6 +298,14 @@ class MyShoefitter {
         }
       });
     }
+  }
+
+  /**
+   * NEW: Detect product ID with retry mechanism for elements that may load later
+   */
+  private detectProductIdWithRetry(currentConfig: any, attempt: number = 0): void {
+    const maxAttempts = 10;
+    const retryDelay = 200; // 200ms
 
     // Check if the Shop System is supported and find the Product ID automatically
     if (currentConfig.shopSystem && this.supportedShopSystems.includes(currentConfig.shopSystem)) {
@@ -133,24 +319,33 @@ class MyShoefitter {
           }
         });
         console.log(`mySHOEFITTER: Product ID found: ${sku}`);
-      } else {
+        return;
+      } else if (!currentConfig.productId && attempt < maxAttempts) {
+        // Retry after delay - some elements might not be loaded yet
+        setTimeout(() => {
+          this.detectProductIdWithRetry(currentConfig, attempt + 1);
+        }, retryDelay);
+        return;
+      } else if (!currentConfig.productId) {
         console.warn('mySHOEFITTER: Product ID could not be found! Please set it manually using productId parameter.');
       }
     }
+  }
 
-    // Get banner params from config utility
-    this.params = getBannerParams() as BannerParams;
+  /**
+   * NEW: Add button with retry mechanism for elements that may load later
+   */
+  private addButtonWithRetry(attempt: number = 0): void {
+    const maxAttempts = 15;
+    const retryDelay = 300; // 300ms
 
-    this.addButton();
-    // this.trackEvent('Button Load');
-
-    this.emit({
-      type: EventTypes.Init,
-      data: currentConfig
-    });
-
-    if (currentConfig.logsEnabled) {
-      console.log('mySHOEFITTER Config:', currentConfig);
+    const success = this.addButton();
+    
+    if (!success && attempt < maxAttempts) {
+      // Retry after delay - button attachment point might not be loaded yet
+      setTimeout(() => {
+        this.addButtonWithRetry(attempt + 1);
+      }, retryDelay);
     }
   }
 
@@ -195,6 +390,12 @@ class MyShoefitter {
     // Clean up integrations
     this.destroyIntegrations();
 
+    // Clean up observers
+    if (this.domObserver) {
+      this.domObserver.disconnect();
+      this.domObserver = null;
+    }
+
     // Remove event listeners
     window.removeEventListener('message', (event) => this.handleMessage(event));
 
@@ -220,6 +421,16 @@ class MyShoefitter {
    * Creates a new HTMLDialogElement and opens the Banner as an iFrame
    */
   public showBanner(): void {
+    // Ensure this runs when DOM is ready
+    this.onReady(() => {
+      this.performShowBanner();
+    });
+  }
+
+  /**
+   * NEW: Perform the actual banner showing (requires DOM)
+   */
+  private performShowBanner(): void {
     const isDesktop = detectClient() === 'desktop';
     if (!isDesktop) {
       const link = generateAppLink();
@@ -264,7 +475,6 @@ class MyShoefitter {
       iframe.style.overflow = 'hidden';
 
       // Create the loading element
-      // Create the loader div
       const loader = document.createElement('div');
       loader.className = 'myshoefitter-loader';
       loader.id = 'myshoefitter-loader';
@@ -419,22 +629,22 @@ class MyShoefitter {
   }
 
   /**
-   * Find the button in html and add click listener
+   * Find the button in html and add click listener - IMPROVED VERSION
+   * @returns boolean - success status
    */
-  private addButton(): void {
+  private addButton(): boolean {
     const currentConfig = getConfig().config as ScriptConfig;
 
     if (!currentConfig.productId) {
-      return;
+      return false;
     }
 
     // Check if button should be shown based on filters
     if (!this.shouldShowButton()) {
-      return;
+      return false;
     }
 
     // We need to access the button config which isn't in the provided Config interface
-    // Assuming it's added to the config object during initialization
     const extendedConfig = getConfig() as any;
     const buttonConfig = extendedConfig.config?.button;
 
@@ -446,11 +656,17 @@ class MyShoefitter {
 
     if (!button && attachTo) {
       button = this.injectButton(attachTo, position);
-      console.log(`mySHOEFITTER: Button injected ${position}: ${attachTo}`);
+      if (button) {
+        console.log(`mySHOEFITTER: Button injected ${position}: ${attachTo}`);
+      }
     } else if (!button && shopSystem) {
       const { selector } = this.getShopSystemConfig(shopSystem);
-      button = this.injectButton(selector, position);
-      console.log(`mySHOEFITTER: Button injected ${position}: ${selector}`);
+      if (selector) {
+        button = this.injectButton(selector, position);
+        if (button) {
+          console.log(`mySHOEFITTER: Button injected ${position}: ${selector}`);
+        }
+      }
     }
 
     if (button) {
@@ -465,8 +681,10 @@ class MyShoefitter {
         });
         this.initMessageEventListener();
       });
+      return true;
     } else {
       console.warn(`mySHOEFITTER: Please add 'button' property to the config object or paste button html code manually into your template.`);
+      return false;
     }
   }
 
@@ -530,11 +748,6 @@ class MyShoefitter {
   private async trackEvent(eventName: string) {
     return;
 
-    // Don't send request on localhost
-    // if ((/^localhost(.*)$|^127(\.[0-9]{1,3}){3}$/is.test(location.hostname) || location.protocol === "file:")) {
-    //   console.info("Pirsch is ignored on localhost. Add the data-dev attribute to enable it.");
-    // }
-
     const data = {
       identification_code: 'kGhjVS9A2aJtLg6PWZx0h6OV8N23WqEy',
       url: 'https://' + this.bannerOrigin,
@@ -561,35 +774,40 @@ class MyShoefitter {
       selector: ''
     };
 
-    switch (shopSystem) {
-      case 'dc': {
-        config.sku = dc.findProductId();
-        break;
+    try {
+      switch (shopSystem) {
+        case 'dc': {
+          config.sku = dc.findProductId();
+          break;
+        }
+        case 'magento': {
+          config.selector = magento.getCartButtonSelector();
+          config.sku = magento.findProductId();
+          break;
+        }
+        case 'shopify': {
+          config.selector = shopify.getCartButtonSelector();
+          config.sku = shopify.findProductId();
+          break;
+        }
+        case 'woocommerce': {
+          config.selector = woocommerce.getCartButtonSelector();
+          config.sku = woocommerce.findProductId();
+          break;
+        }
+        case 'shopware': {
+          config.selector = shopware.getCartButtonSelector();
+          config.sku = shopware.findProductId();
+          break;
+        }
+        case 'oxid': {
+          config.sku = oxid.findProductId();
+          break;
+        }
       }
-      case 'magento': {
-        config.selector = magento.getCartButtonSelector();
-        config.sku = magento.findProductId();
-        break;
-      }
-      case 'shopify': {
-        config.selector = shopify.getCartButtonSelector();
-        config.sku = shopify.findProductId();
-        break;
-      }
-      case 'woocommerce': {
-        config.selector = woocommerce.getCartButtonSelector();
-        config.sku = woocommerce.findProductId();
-        break;
-      }
-      case 'shopware': {
-        config.selector = shopware.getCartButtonSelector();
-        config.sku = shopware.findProductId();
-        break;
-      }
-      case 'oxid': {
-        config.sku = oxid.findProductId();
-        break;
-      }
+    } catch (error) {
+      // Silently handle errors during early DOM access
+      console.log(`mySHOEFITTER: Shop system detection will retry - DOM may not be ready yet`);
     }
 
     return config;
@@ -679,68 +897,73 @@ class MyShoefitter {
       return null;
     }
 
-    // Select the existing button
-    const addToCartButton: HTMLElement | null = document.querySelector(attachTo);
+    try {
+      // Select the existing button
+      const addToCartButton: HTMLElement | null = document.querySelector(attachTo);
 
-    if (addToCartButton) {
-      // Create a new button element
-      const mysfButton: HTMLButtonElement = document.createElement('button');
+      if (addToCartButton) {
+        // Create a new button element
+        const mysfButton: HTMLButtonElement = document.createElement('button');
 
-      // Set properties on the new button
-      mysfButton.id = 'myshoefitter-button'; // Set the button id
+        // Set properties on the new button
+        mysfButton.id = 'myshoefitter-button'; // Set the button id
 
-      // Get button config
-      const extendedConfig = getConfig() as any;
-      const buttonConfig = extendedConfig.config?.button;
+        // Get button config
+        const extendedConfig = getConfig() as any;
+        const buttonConfig = extendedConfig.config?.button;
 
-      mysfButton.innerHTML = this.getButtonContent(); // Set the button text
-      mysfButton.type = 'button'; // Set the button type
+        mysfButton.innerHTML = this.getButtonContent(); // Set the button text
+        mysfButton.type = 'button'; // Set the button type
 
-      // Add custom attributes
-      if (buttonConfig?.attributes) {
-        Object.entries(buttonConfig.attributes as Record<string, string>).forEach(([key, value]: [string, string]) => {
-          mysfButton.setAttribute(key, value);
-        });
+        // Add custom attributes
+        if (buttonConfig?.attributes) {
+          Object.entries(buttonConfig.attributes as Record<string, string>).forEach(([key, value]: [string, string]) => {
+            mysfButton.setAttribute(key, value);
+          });
+        }
+
+        let styles: Partial<CSSStyleDeclaration> = {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          background: 'none',
+          color: 'black',
+          fontFamily: 'inherit',
+          fontSize: '14px',
+          fontWeight: '600',
+          border: '2px solid rgb(255, 125, 79)',
+          borderRadius: '5px',
+          outline: 'none',
+          padding: '10px 20px',
+          margin: '10px 0',
+          cursor: 'pointer',
+        };
+
+        // Merge styles from config into the default styles
+        if (buttonConfig?.styles) {
+          styles = { ...styles, ...buttonConfig.styles }
+        }
+
+        for (const [key, value] of Object.entries(styles)) {
+          mysfButton.style[key as any] = value as string;
+        }
+
+        // Insert the new button before or after the existing button in the DOM
+        if (position === 'before') {
+          addToCartButton.parentNode?.insertBefore(mysfButton, addToCartButton);
+        } else if (position === 'after') {
+          // For inserting after, use the existing button's nextSibling as the reference node
+          // If nextSibling is null, the new button will simply be added as the last child
+          addToCartButton.parentNode?.insertBefore(mysfButton, addToCartButton.nextSibling);
+        }
+
+        return mysfButton;
       }
-
-      let styles: Partial<CSSStyleDeclaration> = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        background: 'none',
-        color: 'black',
-        fontFamily: 'inherit',
-        fontSize: '14px',
-        fontWeight: '600',
-        border: '2px solid rgb(255, 125, 79)',
-        borderRadius: '5px',
-        outline: 'none',
-        padding: '10px 20px',
-        margin: '10px 0',
-        cursor: 'pointer',
-      };
-
-      // Merge styles from config into the default styles
-      if (buttonConfig?.styles) {
-        styles = { ...styles, ...buttonConfig.styles }
-      }
-
-      for (const [key, value] of Object.entries(styles)) {
-        mysfButton.style[key as any] = value as string;
-      }
-
-      // Insert the new button before or after the existing button in the DOM
-      if (position === 'before') {
-        addToCartButton.parentNode?.insertBefore(mysfButton, addToCartButton);
-      } else if (position === 'after') {
-        // For inserting after, use the existing button's nextSibling as the reference node
-        // If nextSibling is null, the new button will simply be added as the last child
-        addToCartButton.parentNode?.insertBefore(mysfButton, addToCartButton.nextSibling);
-      }
-
-      return mysfButton;
+    } catch (error) {
+      console.log('mySHOEFITTER: Button injection failed, will retry when DOM is ready');
     }
+    
     return null;
   }
 }
