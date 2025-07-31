@@ -1,11 +1,27 @@
 export function findProductId() {
-  return extractSkuFromWindowObject() || extractSkuFromHiddenInputField() || extractSKUsFromScriptTag();
+  try {
+    return extractSkuFromWindowObject() || extractSkuFromHiddenInputField() || extractSKUsFromScriptTag();
+  } catch (error) {
+    // DOM might not be ready yet
+    return null;
+  }
 }
 
 export function getCartButtonSelector() {
-  const selectors = ['.product-form > .swatch', 'variant-selects', '.product-form__submit', '.product-form__cart-submit', '.product-form__buttons', '.product-form'];
-  const button = selectors.find(selector => document.querySelector(selector));
-  return button as string;
+  try {
+    const selectors = ['.product-form > .swatch', 'variant-selects', '.product-form__submit', '.product-form__cart-submit', '.product-form__buttons', '.product-form'];
+    const button = selectors.find(selector => {
+      try {
+        return document.querySelector(selector);
+      } catch (e) {
+        return false;
+      }
+    });
+    return button as string;
+  } catch (error) {
+    // DOM might not be ready yet
+    return '';
+  }
 }
 
 export function trackConversion() {
@@ -19,18 +35,22 @@ function extractSkuFromWindowObject(): number | undefined {
 }
 
 function extractSkuFromHiddenInputField(): number | undefined {
-  const input = document.querySelector('input[name="product-id"]') as HTMLInputElement;
-  return input ? parseInt(input.value) : undefined;
+  try {
+    const input = document.querySelector('input[name="product-id"]') as HTMLInputElement;
+    return input ? parseInt(input.value) : undefined;
+  } catch (error) {
+    return undefined;
+  }
 }
 
 function extractSKUsFromScriptTag(): number | null {
-  const scriptTag = document.querySelector('script[id="ProductJson-product-template"]');
-
-  if (!scriptTag) {
-    return null;
-  }
-
   try {
+    const scriptTag = document.querySelector('script[id="ProductJson-product-template"]');
+
+    if (!scriptTag) {
+      return null;
+    }
+
     const jsonData = JSON.parse(scriptTag.textContent || '');
 
     if (jsonData) {
@@ -38,7 +58,8 @@ function extractSKUsFromScriptTag(): number | null {
       return id;
     }
   } catch (error) {
-    // console.error("Fehler beim Verarbeiten des JSON Objekts:", error);
+    // DOM might not be ready or JSON parsing failed
+    return null;
   }
 
   return null;
