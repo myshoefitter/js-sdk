@@ -1,18 +1,7 @@
 export function getCartButtonSelector() {
-  try {
-    const selectors = ['.product--configurator', '.product-detail-configurator-container'];
-    const button = selectors.find(selector => {
-      try {
-        return document.querySelector(selector);
-      } catch (e) {
-        return false;
-      }
-    });
-    return button as string;
-  } catch (error) {
-    // DOM might not be ready yet
-    return '';
-  }
+  const selectors = ['.product--configurator', '.product-detail-configurator-container'];
+  const button = selectors.find(selector => document.querySelector(selector));
+  return button as string;
 }
 
 /**
@@ -51,7 +40,7 @@ function extractFromMetaTag(): string | null {
     }
     return null;
   } catch (error) {
-    // DOM might not be ready yet - return null to allow retry
+    console.error("Error extracting from meta tag:", error);
     return null;
   }
 }
@@ -118,7 +107,7 @@ function extractFromGoogleTagManager(): string | null {
     
     return null;
   } catch (error) {
-    // DOM might not be ready yet - return null to allow retry
+    console.error("Error extracting from Google Tag Manager:", error);
     return null;
   }
 }
@@ -139,7 +128,7 @@ function extractFromHiddenInput(): string | null {
     
     return null;
   } catch (error) {
-    // DOM might not be ready yet - return null to allow retry
+    console.error("Error extracting from hidden input:", error);
     return null;
   }
 }
@@ -160,7 +149,7 @@ function extractFromProductIdInput(): string | null {
     
     return null;
   } catch (error) {
-    // DOM might not be ready yet - return null to allow retry
+    console.error("Error extracting from product-id input:", error);
     return null;
   }
 }
@@ -181,7 +170,7 @@ function extractFromArticleNumber(): string | null {
     
     return null;
   } catch (error) {
-    // DOM might not be ready yet - return null to allow retry
+    console.error("Error extracting from article number:", error);
     return null;
   }
 }

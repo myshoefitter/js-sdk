@@ -1,18 +1,9 @@
 export function findProductId() {
-  try {
-    return extractSkuFromHiddenInputField() || extractSKUsFromScriptTag();
-  } catch (error) {
-    return null;
-  }
+  return extractSkuFromHiddenInputField() || extractSKUsFromScriptTag();
 }
 
 export function getCartButtonSelector() {
-  try {
-    // Check if the selector exists before returning it
-    return document.querySelector('form.cart') ? 'form.cart' : '';
-  } catch (error) {
-    return '';
-  }
+  return 'form.cart';
 }
 
 export function trackConversion() {
@@ -22,31 +13,28 @@ export function trackConversion() {
 // --- Helper functions ---
 
 function extractSkuFromHiddenInputField(): string | undefined {
-  try {
-    const input = document.querySelector('.sku') as HTMLInputElement;
-    return input?.innerText;
-  } catch (error) {
-    return undefined;
-  }
+  const input = document.querySelector('.sku') as HTMLInputElement;
+  return input?.innerText;
 }
 
 function extractSKUsFromScriptTag(): number | null {
+  const scriptTag = document.querySelector('script[type="application/ld+json"]');
+
+  if (!scriptTag) {
+    return null;
+  }
+
   try {
-    const scriptTag = document.querySelector('script[type="application/ld+json"]');
-
-    if (!scriptTag) {
-      return null;
-    }
-
     const jsonData = JSON.parse(scriptTag.textContent || '');
+
+    console.log('JSON DATA', jsonData);
 
     if (jsonData) {
       const id = jsonData?.['@graph']?.find((obj: any) => obj?.sku)?.sku;
       return id;
     }
   } catch (error) {
-    // DOM might not be ready or JSON parsing failed
-    return null;
+    // console.error("Fehler beim Verarbeiten des JSON Objekts:", error);
   }
 
   return null;
