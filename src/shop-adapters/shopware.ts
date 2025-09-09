@@ -37,15 +37,12 @@ export function getCartButtonSelector(): string | null {
 export function getCmsElementId(): string | null {
   try {
     const el = document.querySelector('[data-cms-element-id]') as Element | null;
-    console.log('getCmsElementId', el);
     if (!el) return null;
 
     const val = el.getAttribute('data-cms-element-id');
-    console.log('getCmsElementId', val);
     if (!val) return null;
 
     const trimmed = val.trim();
-    console.log('getCmsElementId', trimmed);
     return trimmed.length > 0 ? trimmed : null;
   } catch (error) {
     console.error("Error extracting data-cms-element-id:", error);
