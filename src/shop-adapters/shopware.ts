@@ -67,6 +67,7 @@ export function findProductId(): string | null {
   try {
     // Try each method in sequence, returning the first successful result
     return (
+      getCmsElementId() ||
       extractFromMetaTag() ||
       extractFromDataLayer() ||
       extractFromGoogleTagManager() ||
