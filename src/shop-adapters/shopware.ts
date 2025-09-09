@@ -1,7 +1,62 @@
-export function getCartButtonSelector() {
-  const selectors = ['.product--configurator', '.product-detail-configurator-container'];
-  const button = selectors.find(selector => document.querySelector(selector));
-  return button as string;
+/**
+ * Utility functions to find cart button selector and extract product ID on a Shopware product page.
+ * Updated to prefer attribute `data-cms-element-id` (ignoring CSS classes) when available.
+ */
+
+/**
+ * Return a CSS selector for the cart button.
+ * Prefer an element that has `data-cms-element-id` (ignoring CSS classes).
+ * Falls back to the previous selector list if no attribute is found.
+ */
+export function getCartButtonSelector(): string | null {
+  try {
+    // Prefer attribute-based selection (ignore CSS classes)
+    const cmsId = getCmsElementId();
+    if (cmsId) {
+      // Build a safe attribute selector using CSS.escape if available
+      const escaped = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+        ? CSS.escape(cmsId)
+        : cssEscapeFallback(cmsId);
+      return `[data-cms-element-id="${escaped}"]`;
+    }
+
+    // Fallback: previous class-based selectors
+    const selectors = ['.product--configurator', '.product-detail-configurator-container'];
+    const found = selectors.find(selector => !!document.querySelector(selector));
+    return found || null;
+  } catch (error) {
+    console.error("Error getting cart button selector:", error);
+    return null;
+  }
+}
+
+/**
+ * Finds the first element in the document with attribute `data-cms-element-id`
+ * and returns its value (trimmed) or null if none found.
+ */
+export function getCmsElementId(): string | null {
+  try {
+    const el = document.querySelector('[data-cms-element-id]') as Element | null;
+    if (!el) return null;
+
+    const val = el.getAttribute('data-cms-element-id');
+    if (!val) return null;
+
+    const trimmed = val.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  } catch (error) {
+    console.error("Error extracting data-cms-element-id:", error);
+    return null;
+  }
+}
+
+/**
+ * Simple fallback escape for attribute values when CSS.escape isn't available.
+ * This is minimal — for the expected hex-like ids it will be sufficient.
+ */
+function cssEscapeFallback(s: string): string {
+  // escape backslashes and quotes
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
 /**
@@ -58,7 +113,7 @@ function extractFromDataLayer(): string | null {
     if (Array.isArray(window.dataLayer)) {
       for (const item of window.dataLayer) {
         // Check for ecommerce data structure
-        if (item.ecommerce && item.ecommerce.detail && item.ecommerce.detail.products) {
+        if (item && item.ecommerce && item.ecommerce.detail && item.ecommerce.detail.products) {
           const products = item.ecommerce.detail.products;
           if (products.length > 0 && products[0].id) {
             const productId = products[0].id.toString();
@@ -67,9 +122,9 @@ function extractFromDataLayer(): string | null {
             }
           }
         }
-        
+
         // Check for google_tag_params structure
-        if (item.google_tag_params && item.google_tag_params.ecomm_prodid) {
+        if (item && item.google_tag_params && item.google_tag_params.ecomm_prodid) {
           const productId = item.google_tag_params.ecomm_prodid.toString();
           if (isValidProductId(productId)) {
             return productId;
@@ -77,7 +132,7 @@ function extractFromDataLayer(): string | null {
         }
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error("Error extracting from dataLayer:", error);
@@ -94,7 +149,7 @@ function extractFromGoogleTagManager(): string | null {
     const scripts = document.querySelectorAll('script');
     for (let i = 0; i < scripts.length; i++) {
       const scriptContent = scripts[i].textContent || '';
-      
+
       // Look for ecomm_prodid in the script content
       const match = scriptContent.match(/ecomm_prodid["']?\s*:\s*["']([^"']+)["']/);
       if (match && match[1]) {
@@ -104,7 +159,7 @@ function extractFromGoogleTagManager(): string | null {
         }
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error("Error extracting from Google Tag Manager:", error);
@@ -118,14 +173,14 @@ function extractFromGoogleTagManager(): string | null {
 function extractFromHiddenInput(): string | null {
   try {
     // Look for the add to cart form input
-    const hiddenInput = document.querySelector('input[name="sAdd"]') as HTMLInputElement;
+    const hiddenInput = document.querySelector('input[name="sAdd"]') as HTMLInputElement | null;
     if (hiddenInput && hiddenInput.value) {
       const productId = hiddenInput.value.trim();
       if (isValidProductId(productId)) {
         return productId;
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error("Error extracting from hidden input:", error);
@@ -139,14 +194,14 @@ function extractFromHiddenInput(): string | null {
 function extractFromProductIdInput(): string | null {
   try {
     // Look for the product-id input field
-    const productIdInput = document.querySelector('input[name="product-id"]') as HTMLInputElement;
+    const productIdInput = document.querySelector('input[name="product-id"]') as HTMLInputElement | null;
     if (productIdInput && productIdInput.value) {
       const productId = productIdInput.value.trim();
       if (isValidProductId(productId)) {
         return productId;
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error("Error extracting from product-id input:", error);
@@ -167,7 +222,7 @@ function extractFromArticleNumber(): string | null {
         return productId;
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error("Error extracting from article number:", error);
@@ -180,8 +235,8 @@ function extractFromArticleNumber(): string | null {
  */
 function isValidProductId(productId: string): boolean {
   // Basic validation - can be enhanced based on specific requirements
-  return productId !== undefined && 
-         productId !== null && 
+  return productId !== undefined &&
+         productId !== null &&
          productId.trim() !== '' &&
          productId.length > 2;
 }
