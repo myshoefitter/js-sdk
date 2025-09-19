@@ -8,44 +8,29 @@
  * Prefer an element that has `data-cms-element-id` (ignoring CSS classes).
  * Falls back to the previous selector list if no attribute is found.
  */
-export function getCartButtonSelector(): string | null {
+export function getCartButtonSelector(): string {
   try {
-    // Prefer attribute-based selection (ignore CSS classes)
-    const cmsId = getCmsElementId();
-    if (cmsId) {
-      // Build a safe attribute selector using CSS.escape if available
-      const escaped = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-        ? CSS.escape(cmsId)
-        : cssEscapeFallback(cmsId);
-      return `[data-cms-element-id="${escaped}"]`;
-    }
-
     // Fallback: previous class-based selectors
     const selectors = ['.product--configurator', '.product-detail-configurator-container'];
     const found = selectors.find(selector => !!document.querySelector(selector));
-    return found || null;
+    return found || '.add-to-cart';
   } catch (error) {
     console.error("Error getting cart button selector:", error);
-    return null;
+    return '.add-to-cart';
   }
 }
 
 /**
- * Finds the first element in the document with attribute `data-cms-element-id`
+ * Finds the first element in the document with attribute `itemprop="mpn"`
  * and returns its value (trimmed) or null if none found.
  */
-export function getCmsElementId(): string | null {
+export function getMPN(): string | null {
   try {
-    const el = document.querySelector('[data-cms-element-id]') as Element | null;
-    if (!el) return null;
-
-    const val = el.getAttribute('data-cms-element-id');
-    if (!val) return null;
-
-    const trimmed = val.trim();
-    return trimmed.length > 0 ? trimmed : null;
+    const el = document.querySelector<HTMLMetaElement>('[itemprop="mpn"]');
+    const val = el?.getAttribute("content")?.trim();
+    return val && val.length > 0 ? val : null;
   } catch (error) {
-    console.error("Error extracting data-cms-element-id:", error);
+    console.error("Error extracting itemprop:", error);
     return null;
   }
 }
@@ -67,7 +52,7 @@ export function findProductId(): string | null {
   try {
     // Try each method in sequence, returning the first successful result
     return (
-      getCmsElementId() ||
+      getMPN() ||
       extractFromMetaTag() ||
       extractFromDataLayer() ||
       extractFromGoogleTagManager() ||
