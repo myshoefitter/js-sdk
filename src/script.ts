@@ -7,6 +7,11 @@ import { getConfig, updateConfig, getBannerParams } from './utils/config';
 
 /**
  * Represents a service with functionalities related to a product.
+ *
+ * DEPRECATED: This SDK is no longer active. The init() method will
+ * not render any button or banner. Websites that still include the
+ * script tag will not see any UI — all public methods are safe to
+ * call but do nothing.
  */
 class MyShoefitter {
   // The dialog window
@@ -36,6 +41,10 @@ class MyShoefitter {
    * @param config ScriptConfig
    */
   public init(config: ScriptConfig): void {
+    // DEPRECATED: SDK is no longer active — do not render button or banner.
+    console.info('mySHOEFITTER: This SDK has been deprecated. The button will not be rendered. You can safely remove the mySHOEFITTER script tag from your website.');
+    return;
+
     // Get the current bannerOrigin
     const currentBannerOrigin = getConfig<string>('config.bannerOrigin');
 
